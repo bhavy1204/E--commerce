@@ -29,6 +29,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/order/form" element={< OrderForm/>} />
+            <Route path="https://merchant.razorpay.com/policy/RIXtLRgSKLM6aX/shipping" element={< OrderForm/>} />
+            <Route path="https://merchant.razorpay.com/policy/RIXtLRgSKLM6aX/terms" element={< OrderForm/>} />
+            <Route path="https://merchant.razorpay.com/policy/RIXtLRgSKLM6aX/refund" element={< OrderForm/>} />
           </Routes>
         </main>
         <Footer />

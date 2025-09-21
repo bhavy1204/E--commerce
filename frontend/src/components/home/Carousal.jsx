@@ -1,17 +1,19 @@
 import React from 'react'
 import { useState, useEffect } from 'react'
-import L0 from "../../assets/L0.jpg"
-import L2 from "../../assets/L2.jpg"
-import L3 from "../../assets/L3.jpg"
+import main1 from "../../assets/main1.jpg"
+import main2 from "../../assets/main2.jpg"
+import main3 from "../../assets/main3.jpg"
+import main4 from "../../assets/main4.jpg"
 
 export const Carousal = () => {
 
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const images = [
-        { src: L0, alt: 'Description 1' },
-        { src: L2, alt: 'Description 2' },
-        { src: L3, alt: 'Description 2' },
+        { src: main1, alt: 'Description 1' },
+        { src: main2, alt: 'Description 2' },
+        { src: main3, alt: 'Description 2' },
+        { src: main4, alt: 'Description 2' },
     ];
 
     useEffect(() => {
