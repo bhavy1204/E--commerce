@@ -1,30 +1,46 @@
 import mongoose from "mongoose";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt"
 
 const productSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
         trim: true,
-        index:true
+        index: true
     },
     description: {
         type: String,
         required: true,
     },
-    category:{
-        type:String,
-        required:true,
+    category: {
+        type: String,
+        required: true,
+        index: true
+    },
+    price: {
+        type: Number,
+        required: true,
+        min: 0
     },
     stock: {
         type: Number,
-        required: [true, "Password is required"],
-        default:1,
+        required: true,
+        default: 1,
+        min: 0
     },
-    images:{
-        type:String
+    images: {
+        type: [String],
+        required: true,
+        validate: {
+            validator: function(v) {
+                return v.length >= 3 && v.length <= 5;
+            },
+            message: 'Product must have between 3 and 5 images'
+        }
+    },
+    views: {
+        type: Number,
+        default: 0
     }
-}, { timeStamps: true });
+}, { timestamps: true });
 
-export const User = mongoose.model("User", userSchema);
+export const Product = mongoose.model("Product", productSchema);
