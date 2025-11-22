@@ -13,51 +13,38 @@ export const razorpayInstance = new Razorpay({
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function generateInvoice({ orderId, userName, userAddress, userEmail, items }) {
+export function generateInvoiceBuffer({ orderId, userName, userAddress, userEmail, items }) {
     return new Promise((resolve, reject) => {
         try {
-            console.log("GENERATE INVOICE RECEIVED:", orderId);
-
-            const invoiceDir = path.join(process.cwd(), "invoices");
-            if (!fs.existsSync(invoiceDir)) {
-                fs.mkdirSync(invoiceDir, { recursive: true });
-            }
-
-            const invoicePath = path.join(invoiceDir, `${orderId}.pdf`);
-            // console.log("Invoice will be saved to:", invoicePath);
-
-            // Create a document
+            const PDFDocument = require("pdfkit");
             const doc = new PDFDocument({ margin: 50 });
 
-            // Pipe its output to a file
-            const stream = fs.createWriteStream(invoicePath);
-            doc.pipe(stream);
+            const buffers = [];
+            doc.on("data", buffers.push.bind(buffers));
+            doc.on("end", () => {
+                const pdfBuffer = Buffer.concat(buffers);
+                resolve(pdfBuffer);
+            });
 
-            // Add content
-            // Header
-            doc.fontSize(20).font('Helvetica-Bold').text('WHIMSEY WEAVERS', 50, 50);
-            doc.fontSize(10).font('Helvetica').text('Somewhere in India', 50, 75);
-            
-            // Invoice title
-            doc.fontSize(16).font('Helvetica-Bold').text(`INVOICE #${orderId}`, 50, 120);
-            doc.fontSize(10).font('Helvetica').text(`Date: ${new Date().toLocaleDateString()}`, 50, 140);
+            doc.fontSize(20).font("Helvetica-Bold").text("WHIMSEY WEAVERS", 50, 50);
+            doc.fontSize(10).font("Helvetica").text("Somewhere in India", 50, 75);
 
-            // Customer information
-            doc.fontSize(12).font('Helvetica-Bold').text('Bill To:', 50, 180);
-            doc.fontSize(10).font('Helvetica')
+            doc.fontSize(16).font("Helvetica-Bold").text(`INVOICE #${orderId}`, 50, 120);
+            doc.fontSize(10).font("Helvetica").text(`Date: ${new Date().toLocaleDateString()}`, 50, 140);
+
+            doc.fontSize(12).font("Helvetica-Bold").text("Bill To:", 50, 180);
+            doc.fontSize(10).font("Helvetica")
                 .text(userName, 50, 200)
                 .text(userEmail, 50, 215)
                 .text(userAddress, 50, 230);
 
-            // Table header
             const tableTop = 280;
-            doc.fontSize(10).font('Helvetica-Bold')
-                .text('Description', 50, tableTop)
-                .text('Quantity', 250, tableTop)
-                .text('Price', 350, tableTop)
-                .text('Amount', 450, tableTop);
+            doc.fontSize(10).font("Helvetica-Bold")
+                .text("Description", 50, tableTop)
+                .text("Quantity", 250, tableTop)
+                .text("Price", 350, tableTop)
+                .text("Amount", 450, tableTop);
 
-            // Table rows
             let y = tableTop + 20;
             let totalAmount = 0;
 
@@ -65,7 +52,7 @@ export async function generateInvoice({ orderId, userName, userAddress, userEmai
                 const amount = item.quantity * item.price;
                 totalAmount += amount;
 
-                doc.fontSize(10).font('Helvetica')
+                doc.fontSize(10).font("Helvetica")
                     .text(item.description, 50, y)
                     .text(item.quantity.toString(), 250, y)
                     .text(`₹${item.price.toFixed(2)}`, 350, y)
@@ -74,32 +61,17 @@ export async function generateInvoice({ orderId, userName, userAddress, userEmai
                 y += 20;
             });
 
-            // Total
-            doc.fontSize(12).font('Helvetica-Bold')
+            doc.fontSize(12).font("Helvetica-Bold")
                 .text(`Total: ₹${totalAmount.toFixed(2)}`, 350, y + 20);
 
-            // Footer
-            doc.fontSize(8).font('Helvetica')
-                .text('Thank you for your business!', 50, doc.page.height - 50);
-
-            // Finalize the PDF and end the stream
             doc.end();
 
-            stream.on('finish', () => {
-                console.log("Invoice generated successfully at:", invoicePath);
-                resolve(invoicePath);
-            });
-
-            stream.on('error', (error) => {
-                reject(error);
-            });
-
-        } catch (err) {
-            console.error("Invoice ERROR:", err);
-            reject(err);
+        } catch (error) {
+            reject(error);
         }
     });
 }
+
 
 export const createOrder = async (req, res) => {
     try {
@@ -128,34 +100,16 @@ export const createOrder = async (req, res) => {
 
 // Sending E mail via Resend.
 
-export async function sendInvoiceEmail(email, invoicePath, orderId) {
+export async function sendInvoiceEmail(email, pdfBuffer, orderId) {
     try {
-        console.log("📧 Attempting to send email to:", email);
-        console.log("📧 Using Resend API Key:", process.env.RESEND_API_KEY ? "Present" : "Missing");
-        console.log("📧 Invoice path:", invoicePath);
-
-        // Check if invoice file exists
-        if (!fs.existsSync(invoicePath)) {
-            console.error("❌ Invoice file not found:", invoicePath);
-            throw new Error("Invoice file not found");
-        }
-
-        const pdfBuffer = fs.readFileSync(invoicePath);
-        console.log("📧 PDF buffer size:", pdfBuffer.length, "bytes");
-
-        const emailData = {
+        const response = await resend.emails.send({
             from: "Whimsey Weavers <onboarding@resend.dev>",
             to: email,
             subject: `Invoice for Order ${orderId}`,
             html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #333;">Thank you for your order!</h2>
-                    <p>Your order <strong>#${orderId}</strong> was successfully placed.</p>
-                    <p>Your invoice is attached to this email.</p>
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-                    <p style="color: #666; font-size: 12px;">
-                        If you have any questions, please contact us at support@whimseyweavers.com
-                    </p>
+                <div style="font-family: Arial; max-width: 600px;">
+                    <h2>Thank you for your order!</h2>
+                    <p>Your invoice for order <strong>#${orderId}</strong> is attached.</p>
                 </div>
             `,
             attachments: [
@@ -164,23 +118,16 @@ export async function sendInvoiceEmail(email, invoicePath, orderId) {
                     content: pdfBuffer.toString("base64"),
                 }
             ]
-        };
-
-        console.log("📧 Sending email with data:", {
-            from: emailData.from,
-            to: emailData.to,
-            subject: emailData.subject
         });
 
-        const response = await resend.emails.send(emailData);
-        console.log("✅ Email sent successfully:", response);
-        
         return response;
+
     } catch (error) {
-        console.error("❌ Email sending failed:", error);
+        console.error("Email failed:", error);
         throw error;
     }
 }
+
 
 
 export const verifyPayment = async (req, res) => {
@@ -206,11 +153,12 @@ export const verifyPayment = async (req, res) => {
             });
         }
 
-        // Generate PDF
-        const invoicePath = await generateInvoice(order);
+        // Generate PDF as buffer
+        const pdfBuffer = await generateInvoiceBuffer(order);
 
-        // Email the user
-        await sendInvoiceEmail(order.userEmail, invoicePath, order.orderId);
+        // Send email
+        await sendInvoiceEmail(order.userEmail, pdfBuffer, order.orderId);
+
 
         return res.status(200).json({
             success: true,
