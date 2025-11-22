@@ -1,16 +1,39 @@
-import React from 'react'
-import Navbar from '../utils/Navbar'
+import React, { useEffect, useState } from 'react'
 import L0 from "../../assets/L0.jpg"
+import { apiClient } from '../../utils/api'
 
 export default function About() {
-    return (
-        <div className=''>
-            <div className='flex items-center justify-center py-10 w-1/2 flex-col m-auto'>
-                <h1 className='text-2xl font-bold text-purple-600 my-5'>About this page</h1>
-                <img src={L0} alt="" className='h-48 rounded-full ' />
-                <p className='mt-5 text-sm leading-[1.8] text-justify'>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Accusamus maxime quasi, pariatur ea totam neque eius dolor repudiandae maiores facere laboriosam ad alias voluptate iste temporibus expedita, ex sequi minima officiis asperiores aperiam odit veniam. Minima atque fugiat rem qui impedit ad deleniti ipsam, ipsum consectetur ab unde ut necessitatibus blanditiis quod pariatur, in voluptate asperiores inventore cum explicabo. Neque excepturi ex perspiciatis blanditiis atque, dolorum dolore cupiditate maxime omnis maiores incidunt, voluptatem debitis, accusantium eum et non corrupti dignissimos aliquid consequatur! </p>
+    const [aboutText, setAboutText] = useState('')
+    const [loading, setLoading] = useState(true)
 
-                <p className='mt-4 text-sm leading-[1.8] text-justify'>Necessitatibus dolorem sequi excepturi nisi omnis dolor soluta error ab dolores, odio non rerum maiores veritatis mollitia magnam aliquam recusandae numquam. Numquam vitae quidem voluptas voluptatum suscipit doloremque corporis itaque, perspiciatis illo ratione. Rem, fugiat. Enim sequi tempore eius eos minus inventore accusantium ipsa perferendis? Reiciendis, quod cumque enim fugit, at dolorem sint illo doloribus nihil quas ullam maiores. Dolor sapiente assumenda doloremque ab perferendis reprehenderit? Quam quaerat quod delectus vero, voluptate autem odio maxime accusamus ut repudiandae quidem dignissimos tempore recusandae deleniti, neque expedita deserunt perferendis odit provident veritatis suscipit ducimus necessitatibus aliquam doloribus. At, tenetur deleniti animi, sequi temporibus repellendus vitae soluta dolorum maiores ad, sapiente tempore eos? Natus nesciunt quas, aspernatur delectus voluptates incidunt voluptatibus.</p>
+    useEffect(() => {
+        const fetchContent = async () => {
+            try {
+                const response = await apiClient.getSiteContent()
+                if (response.success) {
+                    setAboutText(response.data.aboutText || '')
+                }
+            } catch (error) {
+                console.error('Failed to load about content', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchContent()
+    }, [])
+
+    return (
+        <div className='px-4 md:px-10 py-10'>
+            <div className='max-w-3xl mx-auto flex items-center justify-center flex-col text-center'>
+                <h1 className='text-3xl font-bold text-purple-600 my-5'>About Us</h1>
+                <img src={L0} alt="" className='h-40 w-40 rounded-full object-cover shadow-md mb-6' />
+                {loading ? (
+                    <p className='text-gray-500'>Loading...</p>
+                ) : (
+                    <p className='text-base leading-7 text-gray-700 whitespace-pre-line'>
+                        {aboutText || 'We are busy crafting our story. Please check back soon!'}
+                    </p>
+                )}
             </div>
         </div>
     )
