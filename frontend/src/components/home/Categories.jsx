@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { apiClient } from '../../utils/api';
-import ProductCard from '../products/productcard';
+import { apiClient } from '../../utils/api.js';
+import ProductCard from '../products/Productcard.jsx';
 import { Link } from 'react-router-dom';
 
 export const Categories = () => {
