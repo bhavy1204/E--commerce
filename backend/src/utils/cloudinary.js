@@ -1,14 +1,14 @@
 import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";
 
-dotenv.config(); // ensure env is loaded here too, no dependency on main file
+dotenv.config();
 
-// force log environment for sanity check
-console.log("🔧 Loading Cloudinary config:", {
-  CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
-  API_KEY: process.env.CLOUDINARY_API_KEY,
-  API_SECRET: process.env.CLOUDINARY_API_SECRET ? "present" : "missing",
-});
+// log environment for sanity check
+// console.log("🔧 Loading Cloudinary config:", {
+//   CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+//   API_KEY: process.env.CLOUDINARY_API_KEY,
+//   API_SECRET: process.env.CLOUDINARY_API_SECRET ? "present" : "missing",
+// });
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -39,7 +39,7 @@ export const uploadMultipleToCloudinary = async (files) => {
     );
     return urls;
   } catch (error) {
-    console.error("🚨 Cloudinary multiple upload error:", error);
+    console.error("Cloudinary multiple upload error:", error);
     throw new Error(`Error uploading images: ${error.message}`);
   }
 };

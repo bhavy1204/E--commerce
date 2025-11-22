@@ -5,7 +5,7 @@ import {
     getOrderById,
     updateOrderStatus,
     getAllOrders,
-    downloadInvoice
+    // downloadInvoice
 } from "../controllers/order.controller.js";
 import { verifyJWT, isAdmin } from "../middlewares/auth.middleware.js";
 
@@ -15,7 +15,7 @@ const router = express.Router();
 router.post("/", verifyJWT, createOrder);
 router.get("/my-orders", verifyJWT, getUserOrders);
 
-router.get("/:orderId/invoice", verifyJWT,isAdmin,downloadInvoice)
+// router.get("/:orderId/invoice", verifyJWT,isAdmin,downloadInvoice)
 
 router.get("/:id", verifyJWT, getOrderById);
 

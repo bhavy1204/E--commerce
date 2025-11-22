@@ -1,10 +1,7 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
-import fs from "fs";
-import path from "path";
-import { Resend } from "resend"
-import PDFDocument from 'pdfkit';
-
+import { Resend } from "resend";
+import PDFDocument from "pdfkit";
 
 export const razorpayInstance = new Razorpay({
     key_id: process.env.RAZORPAY_KEY,
@@ -16,7 +13,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export function generateInvoiceBuffer({ orderId, userName, userAddress, userEmail, items }) {
     return new Promise((resolve, reject) => {
         try {
-            const PDFDocument = require("pdfkit");
             const doc = new PDFDocument({ margin: 50 });
 
             const buffers = [];
@@ -72,13 +68,14 @@ export function generateInvoiceBuffer({ orderId, userName, userAddress, userEmai
     });
 }
 
+// ---------------------- CREATE RAZORPAY ORDER ------------------------
 
 export const createOrder = async (req, res) => {
     try {
         const { amount } = req.body;
 
         const options = {
-            amount: amount * 100, // convert to paise
+            amount: amount * 100,
             currency: "INR",
             receipt: "order_rcpt_" + Date.now()
         };
@@ -98,7 +95,7 @@ export const createOrder = async (req, res) => {
     }
 };
 
-// Sending E mail via Resend.
+// ---------------------- EMAIL SENDER ------------------------
 
 export async function sendInvoiceEmail(email, pdfBuffer, orderId) {
     try {
@@ -128,7 +125,7 @@ export async function sendInvoiceEmail(email, pdfBuffer, orderId) {
     }
 }
 
-
+// ---------------------- VERIFY PAYMENT ------------------------
 
 export const verifyPayment = async (req, res) => {
     try {
@@ -153,12 +150,11 @@ export const verifyPayment = async (req, res) => {
             });
         }
 
-        // Generate PDF as buffer
+        // Generate PDF buffer
         const pdfBuffer = await generateInvoiceBuffer(order);
 
         // Send email
         await sendInvoiceEmail(order.userEmail, pdfBuffer, order.orderId);
-
 
         return res.status(200).json({
             success: true,
@@ -173,4 +169,3 @@ export const verifyPayment = async (req, res) => {
         });
     }
 };
-
