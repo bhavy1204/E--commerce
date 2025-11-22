@@ -13,21 +13,21 @@ export const Footer = () => {
           <InstagramLogo
             size={32}
             className="cursor-pointer hover:text-purple-600"
-            onClick={() => window.open("https://instagram.com/YOUR_USERNAME_HERE", "_blank")}
+            onClick={() => window.open("https://instagram.com/whimsy_weavers", "_blank")}
           />
 
           {/* WhatsApp */}
           <WhatsappLogo
             size={32}
             className="cursor-pointer hover:text-purple-600"
-            onClick={() => window.open("https://wa.me/YOUR_WHATSAPP_NUMBER_HERE", "_blank")}
+            onClick={() => window.open("https://wa.me/+918005842524", "_blank")}
           />
 
           {/* Email */}
           <EnvelopeSimple
             size={32}
             className="cursor-pointer hover:text-purple-600"
-            onClick={() => window.open("mailto:YOUR_EMAIL_HERE")}
+            onClick={() => window.open("mailto:whimsyweaverss@gmail.com")}
           />
 
         </div>
