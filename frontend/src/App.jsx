@@ -14,7 +14,7 @@ import { Products } from './components/products/Products'
 import { Cart } from './components/user/Cart'
 import { Checkout } from './components/user/Checkout'
 import { Orders } from './components/user/Orders'
-import OrderDetail from './components/user/OrderDetail'
+// import OrderDetail from './components/user/OrderDetail'
 import { AdminPanel } from './components/admin/AdminPanel'
 
 function App() {
@@ -37,7 +37,7 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<Orders />} />
-            <Route path="/orders/:orderId" element={<OrderDetail />} />
+            {/* <Route path="/orders/:orderId" element={<OrderDetail />} /> */}
             <Route path="/admin/*" element={<AdminPanel />} />
           </Routes>
         </main>
