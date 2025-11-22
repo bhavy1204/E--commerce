@@ -1,20 +1,31 @@
-import React from 'react'
-import { useState, useEffect } from 'react'
-import main1 from "../../assets/main1.jpg"
-import main2 from "../../assets/main2.jpg"
-import main3 from "../../assets/main3.jpg"
-import main4 from "../../assets/main4.jpg"
+import React, { useState, useEffect } from 'react'
+import { apiClient } from '../../utils/api'
+
+const defaultImages = [
+    // { url: main1, alt: 'Default 1' },
+    // { url: main2, alt: 'Default 2' },
+    // { url: main3, alt: 'Default 3' },
+    // { url: main4, alt: 'Default 4' },
+];
 
 export const Carousal = () => {
 
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [images, setImages] = useState(defaultImages);
 
-    const images = [
-        { src: main1, alt: 'Description 1' },
-        { src: main2, alt: 'Description 2' },
-        { src: main3, alt: 'Description 2' },
-        { src: main4, alt: 'Description 2' },
-    ];
+    useEffect(() => {
+        const fetchSlider = async () => {
+            try {
+                const response = await apiClient.getSiteContent();
+                if (response.success && response.data.sliderImages?.length) {
+                    setImages(response.data.sliderImages);
+                }
+            } catch (error) {
+                console.error('Failed to load slider images', error);
+            }
+        };
+        fetchSlider();
+    }, []);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -35,8 +46,8 @@ export const Carousal = () => {
                     {images.map((image, index) => (
                         <img
                             key={index}
-                            src={image.src}
-                            alt={image.alt}
+                            src={image.url}
+                            alt={image.alt || `Slide ${index + 1}`}
                             className="w-full h-[400px] object-cover flex-shrink-0"
                         />
                     ))}
