@@ -1,22 +1,32 @@
+import { useEffect, useState } from 'react'
 import { FaqItems } from './FaqItems'
+import { apiClient } from '../../utils/api'
 
 export const FaqList = () => {
-    const FaqData = [
-        { question: "Question 1 ?", answer: "Answer 1" },
-        { question: "Question 2 ?", answer: "Answer 1" },
-        { question: "Question 3 ?", answer: "Answer 1" },
-        { question: "Question 4 ?", answer: "Answer 1" },
-        { question: "Question 5 ?", answer: "Answer 1" },
-        { question: "Question 6 ?", answer: "Answer 1" },
-    ]
+    const [faqs, setFaqs] = useState([])
+
+    useEffect(() => {
+        const fetchFaqs = async () => {
+            try {
+                const response = await apiClient.getSiteContent()
+                if (response.success) {
+                    setFaqs(response.data.faqs || [])
+                }
+            } catch (error) {
+                console.error('Failed to load FAQs', error)
+            }
+        }
+        fetchFaqs()
+    }, [])
+
+    if (!faqs.length) {
+        return <p className="text-sm text-gray-500">No FAQs available yet.</p>
+    }
 
     return (
         <div className="container flex flex-col gap-3">
-            {/* <div className="heading">
-                <h1>Frequently asked Questions</h1>
-            </div> */}
-            {FaqData.map((faq, idx) => (
-                <FaqItems key={idx} question={faq.question} answer={faq.answer} />
+            {faqs.map((faq, idx) => (
+                <FaqItems key={`${faq.question}-${idx}`} question={faq.question} answer={faq.answer} />
             ))}
         </div>
     )

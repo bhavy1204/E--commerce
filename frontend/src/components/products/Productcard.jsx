@@ -1,15 +1,22 @@
-export default function ProductCard({title, price, img}){
-    return(
-        <>
-            <div className="bg-gray-600 min-w-[150px] max-w-[150px] sm:min-w-[180px] sm:max-w-[180px] md:min-w-[200px] md:max-w-[200px] lg:min-w-[240px] lg:max-w-[240px] xl:min-w-[280px] xl:max-w-[280px] mx-2 my-5 px-2 py-1 rounded-md flex flex-col">
-                <img src={img} alt="" className="rounded-md" />
-                <div className=" font-semibold ">
-                    <h1 className="text-white mt-2">{title}</h1>
-                </div>
-                <div className=" flex items-center text-gray-400">
-                    <h1>{'\u20B9'}{price}</h1>
+export default function ProductCard({ title, price, img }) {
+    return (
+        <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col w-60 min-w-[240px]">
+            <div className="h-52 w-full overflow-hidden">
+                <img 
+                    src={img} 
+                    alt={title} 
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                    loading="lazy"
+                />
+            </div>
+            <div className="p-4 flex flex-col flex-grow">
+                <h2 className="text-base font-semibold text-gray-800 mb-2 line-clamp-2">{title}</h2>
+                <div className="mt-auto">
+                    <p className="text-lg font-bold text-purple-600">
+                        ₹{price}
+                    </p>
                 </div>
             </div>
-        </>
-    )
+        </div>
+    );
 }
