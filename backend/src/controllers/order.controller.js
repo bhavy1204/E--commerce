@@ -1,9 +1,14 @@
-import { Order } from "../models/order.model.js";
+import { generateInvoice, sendInvoiceEmail } from "./payment.controller.js";
+import path from "path";
+import fs from "fs";
 import { Product } from "../models/product.model.js";
+import { Order } from "../models/order.model.js";
 
 export const createOrder = async (req, res) => {
     try {
         const { items, shippingAddress, paymentId, paymentMethod = 'cod' } = req.body;
+
+        console.log("REQ BODY:", req.body);
 
         if (!items || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json({
@@ -58,7 +63,7 @@ export const createOrder = async (req, res) => {
             paymentMethod: paymentMethod || 'cod'
         });
 
-        // Update product stock
+        // Update stock
         for (const item of items) {
             await Product.findByIdAndUpdate(
                 item.productId,
@@ -70,12 +75,37 @@ export const createOrder = async (req, res) => {
             .populate('user', 'firstName lastName email')
             .populate('items.product', 'title images price');
 
+        // ✅ FIXED: Correctly map items for invoice
+        const invoicePath = await generateInvoice({
+            orderId: order._id.toString(),
+            userName: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
+            userAddress: `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.zipCode}, ${shippingAddress.country}`,
+            userEmail: populatedOrder.user.email, // Use populated user email
+            items: populatedOrder.items.map(item => ({
+                description: item.product.title, // Use populated product title
+                quantity: item.quantity,
+                price: item.price // Use the price from order items (not product current price)
+            }))
+        });
+
+        console.log("Populated order >> ",populatedOrder);
+
+        // 📧 Email invoice to customer
+        await sendInvoiceEmail(
+            populatedOrder.user.email,
+            invoicePath,
+            order._id.toString()
+        );
+        console.log("✅ Email sent successfully for order:", order._id.toString());
+
         return res.status(201).json({
             success: true,
             message: "Order created successfully",
             data: populatedOrder
         });
+
     } catch (error) {
+        console.log(error);
         return res.status(500).json({
             success: false,
             message: error.message || "Error creating order"
@@ -212,4 +242,30 @@ export const getAllOrders = async (req, res) => {
         });
     }
 };
+
+export const downloadInvoice = async (req, res) => {
+    try {
+        console.log("Download hit");
+        const orderId = req.params.orderId;
+
+        // Use absolute path
+        const invoicePath = path.join(process.cwd(), "invoices", `${orderId}.pdf`);
+        console.log("Looking for invoice at:", invoicePath);
+
+        if (!fs.existsSync(invoicePath)) {
+            return res.status(404).json({ message: "Invoice not found" });
+        }
+
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename="${orderId}.pdf"`);
+
+        const stream = fs.createReadStream(invoicePath);
+        stream.pipe(res);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error downloading invoice" });
+    }
+};
+
 

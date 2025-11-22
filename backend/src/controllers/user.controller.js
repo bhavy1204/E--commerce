@@ -48,7 +48,7 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
     try {
 
-        console.log("LOG IN HIT")
+        // console.log("LOG IN HIT")
         const { email, password } = req.body;
 
         if (!email || !password) {

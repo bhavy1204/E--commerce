@@ -46,6 +46,11 @@ const orderSchema = new mongoose.Schema({
         enum: ['pending', 'paid', 'failed'],
         default: 'pending'
     },
+    paymentMethod: {
+        type: String,
+        enum: ['cod', 'online'],
+        default: 'cod'
+    },
     paymentId: String
 }, { timestamps: true });
 
