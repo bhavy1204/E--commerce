@@ -4,10 +4,11 @@ import { InstagramLogo, WhatsappLogo, EnvelopeSimple } from "phosphor-react";
 export const Footer = () => {
   return (
     <div className='bg-purple-500 text-white px-4 md:px-20 py-8 mt-10'>
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <h1>&copy; Whimsy Weavers</h1>
+      <div className="flex flex-col md:flex-row items-center md:items-center justify-between text-center md:text-left gap-6 md:gap-4">
 
-        <div className="links flex items-center gap-5">
+        <h1 className="text-lg md:text-base">&copy; Whimsy Weavers</h1>
+
+        <div className="links flex items-center justify-center md:justify-end gap-6">
 
           {/* Instagram */}
           <InstagramLogo
