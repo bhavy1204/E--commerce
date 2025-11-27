@@ -45,6 +45,14 @@ class ApiClient {
         });
     }
 
+    async googleLogin(idToken) {
+        return this.request('/auth/google', {
+            method: 'POST',
+            body: JSON.stringify({ idToken })
+        });
+    }
+
+
     async logout() {
         return this.request('/users/logout', {
             method: 'POST',
@@ -173,12 +181,23 @@ class ApiClient {
     // download invoice
     async downloadInvoice(orderId) {
         const url = `${this.baseURL}/orders/${orderId}/invoice`;
-        return await fetch(url, {
-            method: "GET",
-            credentials: "include",
-        });
-    }
 
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Failed to download invoice');
+            }
+
+            return await response.blob(); // return file blob
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export const apiClient = new ApiClient();
