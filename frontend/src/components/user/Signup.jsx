@@ -44,7 +44,7 @@ export const Signup = () => {
       });
 
       if (backendResponse.success) {
-        localStorage.setItem("token", backendResponse.token);
+        localStorage.setItem("token", backendResponse.data.accessToken);
         navigate("/");
       }
     } catch (err) {

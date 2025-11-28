@@ -45,10 +45,10 @@ class ApiClient {
         });
     }
 
-    async googleLogin(idToken) {
+    async googleLogin(token) {
         return this.request('/auth/google', {
             method: 'POST',
-            body: JSON.stringify({ idToken })
+            body: JSON.stringify({ idToken: token })
         });
     }
 

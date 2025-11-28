@@ -92,10 +92,18 @@ export default function Login() {
 
               const res = await api.googleLogin(idToken);
 
-              const userData = res.data?.data?.user;
+              const userData = res.data?.user;
+              const token = res.data?.accessToken;
 
+              // store token properly
+              if (token) {
+                localStorage.setItem("token", token);
+              }
+
+              // update global state
               setUser(userData);
 
+              // redirect
               navigate(userData.role === "admin" ? "/admin" : "/home");
             } catch (err) {
               console.error(err);
