@@ -48,7 +48,7 @@ class ApiClient {
     async googleLogin(token) {
         return this.request('/users/auth/google', {
             method: 'POST',
-            body: JSON.stringify({ idToken: token })
+            body: JSON.stringify({ token })
         });
     }
 
