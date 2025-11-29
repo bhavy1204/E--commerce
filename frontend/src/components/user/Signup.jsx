@@ -39,15 +39,23 @@ export const Signup = () => {
 
   const handleGoogleResponse = async (response) => {
     try {
-      const backendResponse = await apiClient.googleLogin({
-        token: response.credential,
-      });
+      console.log("Google response received:", response);
+      console.log("Credential type:", typeof response.credential);
+      console.log("Credential length:", response.credential?.length);
+
+      const backendResponse = await apiClient.googleLogin(response.credential);
+
+      console.log("Backend response:", backendResponse);
 
       if (backendResponse.success) {
         localStorage.setItem("token", backendResponse.data.accessToken);
-        navigate("/");
+
+        // Redirect to appropriate page based on user role
+        const userRole = backendResponse.data.user?.role;
+        navigate(userRole === "admin" ? "/admin" : "/home");
       }
     } catch (err) {
+      console.error("Google login error:", err);
       setError(err.message || "Google login failed.");
     }
   };

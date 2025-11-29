@@ -115,50 +115,62 @@ export const loginUser = async (req, res) => {
 
 export const googleLogin = async (req, res) => {
     try {
+        console.log("Google login request received");
+        console.log("Request body:", req.body);
+
         const { token } = req.body;
 
-        if (!token) {
+        // Validate token exists and is a string
+        if (!token || typeof token !== 'string') {
+            console.log("Invalid token received:", token);
             return res.status(400).json({
                 success: false,
-                message: "Google token is required",
+                message: "Valid Google token is required",
             });
         }
 
-        // Verify Google token
+        console.log("Token received, length:", token.length);
+
+        // 1. Verify Google Token
         const ticket = await client.verifyIdToken({
             idToken: token,
             audience: process.env.GOOGLE_CLIENT_ID,
         });
 
+        console.log("Google token verified successfully");
+
         const payload = ticket.getPayload();
-        const { email, given_name, family_name, picture } = payload;
+        const { email, given_name, family_name, picture, sub } = payload;
 
-        if (!email) {
-            return res.status(400).json({
-                success: false,
-                message: "Google account has no email",
-            });
-        }
+        console.log("Google user email:", email);
 
-        // Find or create user
+        // 2. Check if user exists
         let user = await User.findOne({ email });
 
+        // 3. If not, create user
         if (!user) {
+            console.log("Creating new user for email:", email);
             user = await User.create({
-                firstName: given_name || '',
+                firstName: given_name || 'User',
                 lastName: family_name || '',
                 email,
+                googleId: sub, // Store Google ID
                 password: null,
                 authProvider: "google",
             });
+            console.log("New user created:", user._id);
+        } else {
+            console.log("Existing user found:", user._id);
         }
 
-        // Generate JWT token
-        const accessToken = jwt.sign(
+        // 4. Create JWT Token
+        const jwtToken = jwt.sign(
             { userId: user._id },
-            process.env.JWT_SECRET || 'fallback-secret',
+            process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
+
+        console.log("JWT token generated successfully");
 
         // Set cookies
         const options = {
@@ -169,7 +181,7 @@ export const googleLogin = async (req, res) => {
 
         return res
             .status(200)
-            .cookie("accessToken", accessToken, options)
+            .cookie("accessToken", jwtToken, options)
             .json({
                 success: true,
                 message: "Google login successful",
@@ -181,19 +193,20 @@ export const googleLogin = async (req, res) => {
                         lastName: user.lastName,
                         role: user.role
                     },
-                    accessToken
+                    accessToken: jwtToken
                 }
             });
 
-    } catch (error) {
-        console.error("Google login error:", error);
+    } catch (err) {
+        console.error("Google login full error:", err);
+        console.error("Error stack:", err.stack);
+
         return res.status(500).json({
             success: false,
-            message: "Google authentication failed: " + error.message,
+            message: "Google authentication failed: " + err.message,
         });
     }
 };
-
 
 export const logoutUser = async (req, res) => {
     try {
