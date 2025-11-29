@@ -8,7 +8,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, user, setUser, api } = useAuth(); // api = ApiClient instance
+  const { login, user, setUser, api } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,6 +30,40 @@ export default function Login() {
       setError(err.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async (credentialResponse) => {
+    try {
+      const idToken = credentialResponse.credential;
+      console.log("Google ID Token received");
+
+      const res = await api.googleLogin(idToken);
+
+      const data = res;
+      console.log("Backend response:", data);
+
+      // Handle successful login
+      if (data.success) {
+        const userData = data.data?.user;
+        const token = data.data?.accessToken;
+
+        // Store token properly
+        if (token) {
+          localStorage.setItem("token", token);
+        }
+
+        // Update global state
+        setUser(userData);
+
+        // Redirect
+        navigate(userData.role === "admin" ? "/admin" : "/home");
+      } else {
+        throw new Error(data.message || "Google login failed");
+      }
+    } catch (err) {
+      console.error("Google login error:", err);
+      setError("Google login failed: " + err.message);
     }
   };
 
@@ -84,32 +118,9 @@ export default function Login() {
           </div>
         </form>
 
-        {/* GOOGLE LOGIN USING ApiClient */}
+        {/* GOOGLE LOGIN - Using consistent approach */}
         <GoogleLogin
-          onSuccess={async (credentialResponse) => {
-            try {
-              const idToken = credentialResponse.credential;
-
-              const res = await api.googleLogin(idToken);
-
-              const userData = res.data?.user;
-              const token = res.data?.accessToken;
-
-              // store token properly
-              if (token) {
-                localStorage.setItem("token", token);
-              }
-
-              // update global state
-              setUser(userData);
-
-              // redirect
-              navigate(userData.role === "admin" ? "/admin" : "/home");
-            } catch (err) {
-              console.error(err);
-              setError("Google login failed.");
-            }
-          }}
+          onSuccess={handleGoogleLogin}
           onError={() => setError("Google login failed.")}
         />
       </div>

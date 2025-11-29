@@ -113,24 +113,25 @@ export const loginUser = async (req, res) => {
     }
 };
 
-export const googleAuth = async (req, res) => {
+export const googleLogin = async (req, res) => {
     try {
-        const { token: idToken } = req.body;
+        const { token } = req.body;
 
-        if (!idToken) {
+        if (!token) {
             return res.status(400).json({
                 success: false,
-                message: "Google token missing",
+                message: "Google token is required",
             });
         }
 
+        // Verify Google token
         const ticket = await client.verifyIdToken({
-            idToken,
+            idToken: token,
             audience: process.env.GOOGLE_CLIENT_ID,
         });
 
         const payload = ticket.getPayload();
-        const { email, name } = payload;
+        const { email, given_name, family_name, picture } = payload;
 
         if (!email) {
             return res.status(400).json({
@@ -139,31 +140,27 @@ export const googleAuth = async (req, res) => {
             });
         }
 
+        // Find or create user
         let user = await User.findOne({ email });
 
-        // If user doesn't exist → create it
         if (!user) {
-            const [firstName, ...rest] = name?.split(" ") || ["", ""];
-            const lastName = rest.join(" ");
-
             user = await User.create({
+                firstName: given_name || '',
+                lastName: family_name || '',
                 email,
-                firstName,
-                lastName,
-                password: null,      // IMPORTANT
-                authType: "google",
+                password: null,
+                authProvider: "google",
             });
         }
 
-        // Generate JWT tokens
-        const accessToken = user.generateAccessToken();
-        const refreshToken = user.generateRefreshToken();
+        // Generate JWT token
+        const accessToken = jwt.sign(
+            { userId: user._id },
+            process.env.JWT_SECRET || 'fallback-secret',
+            { expiresIn: "7d" }
+        );
 
-        user.refreshToken = refreshToken;
-        await user.save({ validateBeforeSave: false });
-
-        const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
-
+        // Set cookies
         const options = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -173,76 +170,29 @@ export const googleAuth = async (req, res) => {
         return res
             .status(200)
             .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
             .json({
                 success: true,
                 message: "Google login successful",
                 data: {
-                    user: loggedInUser,
+                    user: {
+                        id: user._id,
+                        email: user.email,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        role: user.role
+                    },
                     accessToken
                 }
             });
 
     } catch (error) {
+        console.error("Google login error:", error);
         return res.status(500).json({
             success: false,
-            message: error.message || "Google authentication failed",
+            message: "Google authentication failed: " + error.message,
         });
     }
 };
-
-
-export const googleLogin = async (req, res) => {
-    try {
-        const { token } = req.body;
-
-        // 1. Verify Google Token
-        const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID,
-        });
-
-        const payload = ticket.getPayload();
-        const { email, given_name, family_name, picture } = payload;
-
-        // 2. Check if user exists
-        let user = await User.findOne({ email });
-
-        // 3. If not, create user (password null since Google handles auth)
-        if (!user) {
-            user = await User.create({
-                firstName: given_name,
-                lastName: family_name,
-                email,
-                password: null, // Optional: you can store "" or hash a random string
-                authProvider: "google",
-            });
-        }
-
-        // 4. Create JWT Token
-        const jwtToken = jwt.sign(
-            { userId: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
-
-        return res.status(200).json({
-            success: true,
-            data: {
-                user,          // user object
-                accessToken: jwtToken
-            }
-        });
-
-    } catch (err) {
-        console.log(err);
-        return res.status(500).json({
-            success: false,
-            message: "Google authentication failed",
-        });
-    }
-};
-
 
 
 export const logoutUser = async (req, res) => {

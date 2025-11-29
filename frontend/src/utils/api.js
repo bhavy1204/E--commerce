@@ -46,12 +46,11 @@ class ApiClient {
     }
 
     async googleLogin(token) {
-        return this.request('/users/auth/google', {
+        return this.request('/users/google-login', {
             method: 'POST',
             body: JSON.stringify({ token })
         });
     }
-
 
     async logout() {
         return this.request('/users/logout', {
