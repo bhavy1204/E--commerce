@@ -4,7 +4,6 @@ import {
     loginUser, 
     logoutUser, 
     getCurrentUser, 
-    googleAuth,
     googleLogin
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
