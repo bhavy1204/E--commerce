@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { apiClient } from "../../utils/api";
+import { GoogleLogin } from "@react-oauth/google";
 
 export const Signup = () => {
   const [formData, setFormData] = useState({
@@ -11,39 +12,14 @@ export const Signup = () => {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const googleButtonRef = useRef(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    /* Load Google script */
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.onload = initializeGoogle;
-    document.body.appendChild(script);
-  }, []);
-
-  const initializeGoogle = () => {
-    /* Create the Google login button */
-    window.google.accounts.id.initialize({
-      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-      callback: handleGoogleResponse,
-    });
-
-    window.google.accounts.id.renderButton(googleButtonRef.current, {
-      theme: "filled_blue",
-      size: "large",
-      width: "100%",
-    });
-  };
-
-  const handleGoogleResponse = async (response) => {
+  const handleGoogleLogin = async (credentialResponse) => {
     try {
-      console.log("Google response received:", response);
-      console.log("Credential type:", typeof response.credential);
-      console.log("Credential length:", response.credential?.length);
+      const idToken = credentialResponse.credential;
+      console.log("Google ID Token received");
 
-      const backendResponse = await apiClient.googleLogin(response.credential);
+      const backendResponse = await apiClient.googleLogin(idToken);
 
       console.log("Backend response:", backendResponse);
 
@@ -97,7 +73,13 @@ export const Signup = () => {
         )}
 
         {/* Google Login Button */}
-        <div ref={googleButtonRef} className="w-full"></div>
+        <div className="w-full flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleLogin}
+            onError={() => setError("Google login failed.")}
+            width="100%"
+          />
+        </div>
 
         <hr className="w-full my-4 border-gray-300" />
 

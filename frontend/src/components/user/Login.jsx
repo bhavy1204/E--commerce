@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
+import { apiClient } from "../../utils/api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, user, setUser, api } = useAuth();
+  const { login, user, setUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export default function Login() {
       const idToken = credentialResponse.credential;
       console.log("Google ID Token received");
 
-      const res = await api.googleLogin(idToken);
+      const res = await apiClient.googleLogin(idToken);
 
       const data = res;
       console.log("Backend response:", data);

@@ -41,7 +41,7 @@ export const useAuth = () => {
         }
     };
 
-    return { user, loading, login, logout, checkAuth };
+    return { user, setUser, loading, login, logout, checkAuth };
 };
 
 export const useCart = () => {
