@@ -26,6 +26,7 @@ import orderRouter from "./src/routes/order.route.js";
 import adminRouter from "./src/routes/admin.route.js";
 import contentRouter from "./src/routes/content.route.js";
 import paymentRouter from "./src/routes/payment.route.js"
+import couponRouter from "./src/routes/coupon.routes.js";
 
 // Routes declaration
 app.use("/api/v1/users", userRouter);
@@ -34,5 +35,6 @@ app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/content", contentRouter);
 app.use("/api/v1/payment", paymentRouter);
+app.use("/api/v1/coupons", couponRouter);
 
 export { app }

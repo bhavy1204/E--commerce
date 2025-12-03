@@ -3,10 +3,11 @@ import path from "path";
 import fs from "fs";
 import { Product } from "../models/product.model.js";
 import { Order } from "../models/order.model.js";
+import { Coupon } from "../models/coupon.model.js";
 
 export const createOrder = async (req, res) => {
     try {
-        const { items, shippingAddress, paymentId, paymentMethod = 'cod' } = req.body;
+        const { items, shippingAddress, paymentId, paymentMethod = 'cod', couponCode } = req.body;
 
         console.log("REQ BODY:", req.body);
 
@@ -53,6 +54,53 @@ export const createOrder = async (req, res) => {
             });
         }
 
+        let discountAmount = 0;
+        let appliedCoupon = null;
+
+        if (couponCode) {
+            const coupon = await Coupon.findOne({
+                code: couponCode.toUpperCase(),
+                isActive: true
+            });
+
+            if (!coupon) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid coupon code"
+                });
+            }
+
+            if (new Date() > new Date(coupon.expirationDate)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Coupon has expired"
+                });
+            }
+
+            const isUsed = coupon.usedBy.includes(req.user._id);
+            if (isUsed) {
+                return res.status(400).json({
+                    success: false,
+                    message: "You have already used this coupon"
+                });
+            }
+
+            appliedCoupon = coupon;
+
+            if (coupon.discountType === 'percentage') {
+                discountAmount = (totalAmount * coupon.discountValue) / 100;
+            } else {
+                discountAmount = coupon.discountValue;
+            }
+
+            // Ensure discount doesn't exceed total
+            if (discountAmount > totalAmount) {
+                discountAmount = totalAmount;
+            }
+
+            totalAmount -= discountAmount;
+        }
+
         const order = await Order.create({
             user: req.user._id,
             items: orderItems,
@@ -60,8 +108,16 @@ export const createOrder = async (req, res) => {
             shippingAddress,
             paymentId: paymentId || undefined,
             paymentStatus: paymentId ? 'paid' : 'pending',
-            paymentMethod: paymentMethod || 'cod'
+            paymentMethod: paymentMethod || 'cod',
+            coupon: appliedCoupon ? appliedCoupon._id : undefined,
+            discountAmount
         });
+
+        if (appliedCoupon) {
+            await Coupon.findByIdAndUpdate(appliedCoupon._id, {
+                $push: { usedBy: req.user._id }
+            });
+        }
 
         // Update stock
         for (const item of items) {
