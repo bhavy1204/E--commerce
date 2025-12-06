@@ -1,82 +1,136 @@
 import { Coupon } from "../models/coupon.model.js";
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
 
-const createCoupon = asyncHandler(async (req, res) => {
-    const { code, discountType, discountValue, expirationDate } = req.body;
+const createCoupon = async (req, res) => {
+    try {
+        const { code, discountType, discountValue, expirationDate } = req.body;
 
-    if (!code || !discountType || !discountValue || !expirationDate) {
-        throw new ApiError(400, "All fields are required");
+        if (!code || !discountType || !discountValue || !expirationDate) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required"
+            });
+        }
+
+        const existingCoupon = await Coupon.findOne({ code: code.toUpperCase() });
+        if (existingCoupon) {
+            return res.status(400).json({
+                success: false,
+                message: "Coupon with this code already exists"
+            });
+        }
+
+        const coupon = await Coupon.create({
+            code: code.toUpperCase(),
+            discountType,
+            discountValue,
+            expirationDate
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Coupon created successfully",
+            data: coupon
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Error creating coupon"
+        });
     }
+};
 
-    const existingCoupon = await Coupon.findOne({ code: code.toUpperCase() });
-    if (existingCoupon) {
-        throw new ApiError(400, "Coupon with this code already exists");
+const getAllCoupons = async (req, res) => {
+    try {
+        const coupons = await Coupon.find({}).sort({ createdAt: -1 });
+        return res.status(200).json({
+            success: true,
+            message: "Coupons fetched successfully",
+            data: coupons
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Error fetching coupons"
+        });
     }
+};
 
-    const coupon = await Coupon.create({
-        code: code.toUpperCase(),
-        discountType,
-        discountValue,
-        expirationDate
-    });
+const deleteCoupon = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const coupon = await Coupon.findByIdAndDelete(id);
 
-    return res.status(201).json(
-        new ApiResponse(201, coupon, "Coupon created successfully")
-    );
-});
+        if (!coupon) {
+            return res.status(404).json({
+                success: false,
+                message: "Coupon not found"
+            });
+        }
 
-const getAllCoupons = asyncHandler(async (req, res) => {
-    const coupons = await Coupon.find({}).sort({ createdAt: -1 });
-    return res.status(200).json(
-        new ApiResponse(200, coupons, "Coupons fetched successfully")
-    );
-});
-
-const deleteCoupon = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const coupon = await Coupon.findByIdAndDelete(id);
-
-    if (!coupon) {
-        throw new ApiError(404, "Coupon not found");
+        return res.status(200).json({
+            success: true,
+            message: "Coupon deleted successfully",
+            data: {}
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Error deleting coupon"
+        });
     }
+};
 
-    return res.status(200).json(
-        new ApiResponse(200, {}, "Coupon deleted successfully")
-    );
-});
+const validateCoupon = async (req, res) => {
+    try {
+        const { code } = req.body;
+        const userId = req.user._id;
 
-const validateCoupon = asyncHandler(async (req, res) => {
-    const { code } = req.body;
-    const userId = req.user._id;
+        if (!code) {
+            return res.status(400).json({
+                success: false,
+                message: "Coupon code is required"
+            });
+        }
 
-    if (!code) {
-        throw new ApiError(400, "Coupon code is required");
+        const coupon = await Coupon.findOne({
+            code: code.toUpperCase(),
+            isActive: true
+        });
+
+        if (!coupon) {
+            return res.status(404).json({
+                success: false,
+                message: "Invalid coupon code"
+            });
+        }
+
+        if (new Date() > new Date(coupon.expirationDate)) {
+            return res.status(400).json({
+                success: false,
+                message: "Coupon has expired"
+            });
+        }
+
+        const isUsed = coupon.usedBy.includes(userId);
+        if (isUsed) {
+            return res.status(400).json({
+                success: false,
+                message: "You have already used this coupon"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Coupon is valid",
+            data: coupon
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Error validating coupon"
+        });
     }
-
-    const coupon = await Coupon.findOne({
-        code: code.toUpperCase(),
-        isActive: true
-    });
-
-    if (!coupon) {
-        throw new ApiError(404, "Invalid coupon code");
-    }
-
-    if (new Date() > new Date(coupon.expirationDate)) {
-        throw new ApiError(400, "Coupon has expired");
-    }
-
-    const isUsed = coupon.usedBy.includes(userId);
-    if (isUsed) {
-        throw new ApiError(400, "You have already used this coupon");
-    }
-
-    return res.status(200).json(
-        new ApiResponse(200, coupon, "Coupon is valid")
-    );
-});
+};
 
 export {
     createCoupon,
