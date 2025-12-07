@@ -1,6 +1,8 @@
 import React from 'react';
 import { createContext, useContext } from 'react';
-import { useAuth as useAuthHook, useCart as useCartHook } from '../hooks/useAuth';
+import { useAuth as useAuthHook } from "../hooks/useAuth.js";
+import { useCart as useCartHook } from "../hooks/useCart.js";
+
 
 const AuthContext = createContext(null);
 const CartContext = createContext(null);

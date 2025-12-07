@@ -165,6 +165,32 @@ class ApiClient {
         return this.request(`/orders?${queryString}`);
     }
 
+    // Coupon methods
+    async getCoupons() {
+        return this.request('/coupons');
+    }
+
+    async createCoupon(data) {
+        return this.request('/coupons', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    async deleteCoupon(id) {
+        return this.request(`/coupons/${id}`, {
+            method: 'DELETE'
+        });
+    }
+
+    async validateCoupon(code) {
+        return this.request('/coupons/validate', {
+            method: 'POST',
+            body: JSON.stringify({ code })
+        });
+    }
+
+
     // Site content
     async getSiteContent() {
         return this.request('/content');

@@ -1,19 +1,60 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Trash2, Plus, Minus } from 'lucide-react';
+import { Trash2, Plus, Minus, Tag } from 'lucide-react';
 import { useCart, useAuth } from '../../context/AuthContext';
+import { apiClient } from '../../utils/api';
 
 export const Cart = () => {
     const { cart, removeFromCart, updateQuantity, getTotal, clearCart } = useCart();
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const navigate = useNavigate();
+    const [couponCode, setCouponCode] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState(null);
+    const [couponError, setCouponError] = useState('');
+    const [couponSuccess, setCouponSuccess] = useState('');
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+        setCouponError('');
+        setCouponSuccess('');
+
+        try {
+            const response = await apiClient.validateCoupon(couponCode);
+            setAppliedCoupon(response.data);
+            setCouponSuccess('Coupon applied successfully!');
+        } catch (error) {
+            setAppliedCoupon(null);
+            setCouponError(error.message || 'Invalid coupon');
+        }
+    };
+
+    const getDiscountAmount = () => {
+        if (!appliedCoupon) return 0;
+        const subtotal = getTotal();
+        let discount = 0;
+        if (appliedCoupon.discountType === 'percentage') {
+            discount = (subtotal * appliedCoupon.discountValue) / 100;
+        } else {
+            discount = appliedCoupon.discountValue;
+        }
+        return Math.min(discount, subtotal);
+    };
+
+    const getFinalTotal = () => {
+        return getTotal() - getDiscountAmount();
+    };
 
     const handleCheckout = () => {
         if (!user) {
             navigate('/login');
             return;
         }
-        navigate('/checkout');
+        navigate('/checkout', {
+            state: {
+                couponCode: appliedCoupon ? appliedCoupon.code : null,
+                discountAmount: getDiscountAmount()
+            }
+        });
     };
 
     if (cart.length === 0) {
@@ -116,14 +157,56 @@ export const Cart = () => {
                                     <span>Subtotal</span>
                                     <span>₹{getTotal()}</span>
                                 </div>
+
+                                {appliedCoupon && (
+                                    <div className="flex justify-between text-green-600">
+                                        <span>Discount ({appliedCoupon.code})</span>
+                                        <span>-₹{getDiscountAmount()}</span>
+                                    </div>
+                                )}
+
                                 <div className="flex justify-between">
                                     <span>Shipping</span>
                                     <span>Free</span>
                                 </div>
                                 <div className="border-t pt-4 flex justify-between text-xl font-bold">
                                     <span>Total</span>
-                                    <span>₹{getTotal()}</span>
+                                    <span>₹{getFinalTotal()}</span>
                                 </div>
+                            </div>
+
+                            <div className="mb-6">
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={couponCode}
+                                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                        placeholder="Coupon Code"
+                                        className="flex-1 border rounded-md px-3 py-2"
+                                        disabled={!!appliedCoupon}
+                                    />
+                                    {appliedCoupon ? (
+                                        <button
+                                            onClick={() => {
+                                                setAppliedCoupon(null);
+                                                setCouponCode('');
+                                                setCouponSuccess('');
+                                            }}
+                                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                                        >
+                                            Remove
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={handleApplyCoupon}
+                                            className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900"
+                                        >
+                                            Apply
+                                        </button>
+                                    )}
+                                </div>
+                                {couponError && <p className="text-red-500 text-sm mt-1">{couponError}</p>}
+                                {couponSuccess && <p className="text-green-600 text-sm mt-1">{couponSuccess}</p>}
                             </div>
 
                             <button

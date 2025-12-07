@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
 import { useCart } from '../../context/AuthContext';
 
@@ -8,6 +8,8 @@ import { useCart } from '../../context/AuthContext';
 export const Checkout = () => {
     const { cart, getTotal, clearCart } = useCart();
     const navigate = useNavigate();
+    const location = useLocation();
+    const { couponCode, discountAmount } = location.state || {};
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         firstName: '',
@@ -37,10 +39,10 @@ export const Checkout = () => {
         }
 
         try {
-            const amount = getTotal(); // total in rupees
+            const amount = getTotal() - (discountAmount || 0); // total in rupees
             const data = await apiClient.request('/payment/create-order', {
                 method: "POST",
-                body: JSON.stringify({amount})
+                body: JSON.stringify({ amount })
             })
 
             const options = {
@@ -82,7 +84,8 @@ export const Checkout = () => {
             })),
             shippingAddress: formData,
             paymentMethod: 'razorpay',
-            paymentStatus: 'paid'
+            paymentStatus: 'paid',
+            couponCode
         };
 
         const response = await apiClient.createOrder(orderData);
@@ -111,7 +114,8 @@ export const Checkout = () => {
                     quantity: item.quantity
                 })),
                 shippingAddress: formData,
-                paymentMethod: 'cod'
+                paymentMethod: 'cod',
+                couponCode
             };
 
             const response = await apiClient.createOrder(orderData);
@@ -253,6 +257,19 @@ export const Checkout = () => {
                                     <span>Total</span>
                                     <span>₹{getTotal()}</span>
                                 </div>
+
+                                {discountAmount > 0 && (
+                                    <>
+                                        <div className="flex justify-between text-green-600">
+                                            <span>Discount ({couponCode})</span>
+                                            <span>-₹{discountAmount}</span>
+                                        </div>
+                                        <div className="border-t pt-4 flex justify-between text-xl font-bold">
+                                            <span>Final Total</span>
+                                            <span>₹{getTotal() - discountAmount}</span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
