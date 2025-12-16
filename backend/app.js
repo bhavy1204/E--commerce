@@ -27,6 +27,7 @@ import adminRouter from "./src/routes/admin.route.js";
 import contentRouter from "./src/routes/content.route.js";
 import paymentRouter from "./src/routes/payment.route.js"
 import couponRouter from "./src/routes/coupon.routes.js";
+import otpRouter from "./src/routes/otp.route.js"
 
 // Routes declaration
 app.use("/api/v1/users", userRouter);
@@ -36,5 +37,6 @@ app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/content", contentRouter);
 app.use("/api/v1/payment", paymentRouter);
 app.use("/api/v1/coupons", couponRouter);
+app.use("/api/v1/otp", otpRouter);
 
 export { app }

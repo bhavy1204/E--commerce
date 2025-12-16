@@ -12,6 +12,13 @@ export const Signup = () => {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Otp 
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleGoogleLogin = async (credentialResponse) => {
@@ -36,6 +43,46 @@ export const Signup = () => {
     }
   };
 
+  const handleSendOtp = async () => {
+    if (!formData.email) {
+      setError("Please enter email first");
+      return;
+    }
+
+    setError("");
+    setOtpLoading(true);
+
+    try {
+      await apiClient.sendEmailOtp(formData.email);
+      setOtpSent(true);
+    } catch (err) {
+      setError(err.message || "Failed to send OTP");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp) {
+      setError("Enter OTP");
+      return;
+    }
+
+    setError("");
+    setOtpLoading(true);
+
+    try {
+      await apiClient.verifyEmailOtp(formData.email, otp);
+      setOtpVerified(true);
+    } catch (err) {
+      setError(err.message || "Invalid OTP");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -45,6 +92,12 @@ export const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!otpVerified) {
+      setError("Please verify your email first");
+      return;
+    }
+
     setError("");
     setLoading(true);
 
@@ -54,11 +107,12 @@ export const Signup = () => {
         navigate("/login");
       }
     } catch (err) {
-      setError(err.message || "Signup failed. Please try again.");
+      setError(err.message || "Signup failed");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-20">
@@ -106,15 +160,57 @@ export const Signup = () => {
             />
           </div>
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="px-3 py-2 rounded-md border focus:ring-2 focus:ring-purple-500"
-          />
+          {/* Email + Send OTP */}
+          <div className="flex gap-2">
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              disabled={otpVerified}
+              className="flex-1 px-3 py-2 rounded-md border focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+            />
+
+            <button
+              type="button"
+              onClick={handleSendOtp}
+              disabled={otpSent || otpLoading}
+              className="px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
+            >
+              {otpSent ? "Sent" : "Send OTP"}
+            </button>
+          </div>
+
+          {/* OTP Verify */}
+          {otpSent && !otpVerified && (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-md border focus:ring-2 focus:ring-purple-500"
+              />
+
+              <button
+                type="button"
+                onClick={handleVerifyOtp}
+                disabled={otpLoading}
+                className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                Verify
+              </button>
+            </div>
+          )}
+
+          {/* OTP Verified Message */}
+          {otpVerified && (
+            <p className="text-green-600 text-sm font-medium">
+              Email verified ✓
+            </p>
+          )}
 
           <input
             type="password"
@@ -133,7 +229,7 @@ export const Signup = () => {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !otpVerified}
               className="bg-green-600 mt-5 px-4 py-2 font-semibold text-white rounded-md hover:bg-green-700 disabled:opacity-50"
             >
               {loading ? "Signing up..." : "Submit"}
@@ -143,4 +239,5 @@ export const Signup = () => {
       </div>
     </div>
   );
+
 };

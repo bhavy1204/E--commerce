@@ -62,6 +62,22 @@ class ApiClient {
         return this.request('/users/me');
     }
 
+    // OTP methods
+    async sendEmailOtp(email) {
+        return this.request('/otp/send-email-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        });
+    }
+
+    async verifyEmailOtp(email, otp) {
+        return this.request('/otp/verify-email-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email, otp }),
+        });
+    }
+
+
     // Product methods
     async getProducts(params = {}) {
         const queryString = new URLSearchParams(params).toString();
