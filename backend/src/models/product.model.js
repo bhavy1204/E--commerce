@@ -16,6 +16,11 @@ const productSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    subCategory: {
+        type: String,
+        required: true,
+        index: true
+    },
     price: {
         type: Number,
         required: true,
@@ -31,7 +36,7 @@ const productSchema = new mongoose.Schema({
         type: [String],
         required: true,
         validate: {
-            validator: function(v) {
+            validator: function (v) {
                 return v.length >= 3 && v.length <= 5;
             },
             message: 'Product must have between 3 and 5 images'

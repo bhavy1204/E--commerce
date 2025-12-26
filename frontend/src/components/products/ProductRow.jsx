@@ -1,38 +1,29 @@
 import ProductCard from "./Productcard"
+import { Link } from "react-router-dom"
 
-// temperory products 
-const items = [
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-    { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
-]
+// ProductRow component
 
-export default function ProductRow({ category }) {
+export default function ProductRow({ category, products = [] }) {
     return (
-        <div className="mb-20 mx-20 no-scrollbar">
-            <h1 className="text-xl font-bold">{category}</h1>
-            <div className="flex space-x-7 overflow-x-auto no-scrollbar">
-                {items.map((item, idx) => (
-                    <ProductCard
-                        key={idx}
-                        img={item.img}
-                        title={item.title}
-                        price={item.price}
-                        className="w-60 min-w-[240px]"
-                    />
-                ))}
+        <div className="mb-8 md:mb-12 no-scrollbar">
+            <h1 className="text-xl font-bold mb-4 capitalize">{category}</h1>
+            <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-4">
+                {products.length > 0 ? (
+                    products.map((product) => (
+                        <div key={product._id} className="w-60 min-w-[240px] flex-shrink-0">
+                            <Link to={`/product/${product._id}`}>
+                                <ProductCard
+                                    img={product.images[0]}
+                                    title={product.title}
+                                    price={product.price}
+                                    className="w-full"
+                                />
+                            </Link>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-gray-500">No products found in this section.</p>
+                )}
             </div>
         </div>
     )

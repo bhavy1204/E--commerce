@@ -53,9 +53,24 @@ export const Checkout = () => {
                 description: 'Order Payment',
                 order_id: data.orderId,
                 handler: async (response) => {
+                    const orderPayload = {
+                        orderId: data.orderId,
+                        userEmail: user?.email,
+                        userName: `${formData.firstName} ${formData.lastName}`,
+                        userAddress: `${formData.address}, ${formData.city}, ${formData.state}, ${formData.zipCode}, ${formData.country}`,
+                        items: cart.map(item => ({
+                            description: item.product.title,
+                            quantity: item.quantity,
+                            price: item.product.price
+                        }))
+                    };
+
                     const verifyRes = await apiClient.request('/payment/verify', {
                         method: 'POST',
-                        body: JSON.stringify(response),
+                        body: JSON.stringify({
+                            ...response,
+                            order: orderPayload
+                        }),
                     });
 
                     if (verifyRes.success) {

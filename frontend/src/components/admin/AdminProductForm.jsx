@@ -12,11 +12,14 @@ export const AdminProductForm = () => {
         title: '',
         description: '',
         category: '',
+        subCategory: '',
         price: '',
         stock: ''
     });
     const [newCategory, setNewCategory] = useState('');
     const [isNewCategory, setIsNewCategory] = useState(false);
+    const [newSubCategory, setNewSubCategory] = useState('');
+    const [isNewSubCategory, setIsNewSubCategory] = useState(false);
     const [images, setImages] = useState([]);
     const [imagePreview, setImagePreview] = useState([]);
     const [error, setError] = useState('');
@@ -42,20 +45,40 @@ export const AdminProductForm = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        
+
         if (name === 'category') {
             if (value === 'new') {
                 setIsNewCategory(true);
+                setIsNewSubCategory(true); // If new category, subcat must be new
                 setFormData({
                     ...formData,
-                    category: ''
+                    category: '',
+                    subCategory: ''
                 });
             } else {
                 setIsNewCategory(false);
+                setIsNewSubCategory(false);
                 setNewCategory('');
+                setNewSubCategory('');
                 setFormData({
                     ...formData,
-                    category: value
+                    category: value,
+                    subCategory: '' // Reset subcategory when category changes
+                });
+            }
+        } else if (name === 'subCategory') {
+            if (value === 'new') {
+                setIsNewSubCategory(true);
+                setFormData({
+                    ...formData,
+                    subCategory: ''
+                });
+            } else {
+                setIsNewSubCategory(false);
+                setNewSubCategory('');
+                setFormData({
+                    ...formData,
+                    subCategory: value
                 });
             }
         } else {
@@ -75,9 +98,18 @@ export const AdminProductForm = () => {
         });
     };
 
+    const handleNewSubCategoryChange = (e) => {
+        const value = e.target.value;
+        setNewSubCategory(value);
+        setFormData({
+            ...formData,
+            subCategory: value
+        });
+    };
+
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
-        
+
         if (files.length < 3 || files.length > 5) {
             setError('Please select between 3 and 5 images');
             return;
@@ -104,6 +136,13 @@ export const AdminProductForm = () => {
             return;
         }
 
+        const subCategoryToUse = isNewSubCategory ? newSubCategory.trim() : formData.subCategory;
+        if (!subCategoryToUse) {
+            setError('Please select or enter a subcategory');
+            setLoading(false);
+            return;
+        }
+
         if (images.length < 3 || images.length > 5) {
             setError('Please select between 3 and 5 images');
             setLoading(false);
@@ -115,6 +154,7 @@ export const AdminProductForm = () => {
             formDataToSend.append('title', formData.title);
             formDataToSend.append('description', formData.description);
             formDataToSend.append('category', categoryToUse);
+            formDataToSend.append('subCategory', subCategoryToUse);
             formDataToSend.append('price', formData.price);
             formDataToSend.append('stock', formData.stock);
 
@@ -184,9 +224,9 @@ export const AdminProductForm = () => {
                                     className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 >
                                     <option value="">Select Category</option>
-                                    {categories.map((cat) => (
-                                        <option key={cat} value={cat}>
-                                            {cat}
+                                    {categories.map((catObj) => (
+                                        <option key={catObj.name} value={catObj.name}>
+                                            {catObj.name}
                                         </option>
                                     ))}
                                     <option value="new">Add New Category</option>
@@ -198,6 +238,38 @@ export const AdminProductForm = () => {
                                         placeholder="Enter new category name"
                                         value={newCategory}
                                         onChange={handleNewCategoryChange}
+                                        required
+                                        className="w-full mt-2 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    />
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold mb-2">Sub Category</label>
+                                <select
+                                    name="subCategory"
+                                    value={isNewSubCategory ? 'new' : formData.subCategory}
+                                    onChange={handleInputChange}
+                                    required={!isNewSubCategory}
+                                    disabled={!formData.category && !isNewCategory} // Disable if no category selected
+                                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                                >
+                                    <option value="">Select Sub Category</option>
+                                    {/* Populate subcats if category selected and not new */}
+                                    {!isNewCategory && formData.category && categories.find(c => c.name === formData.category)?.subCategories?.map((sub) => (
+                                        <option key={sub} value={sub}>
+                                            {sub}
+                                        </option>
+                                    ))}
+                                    <option value="new">Add New Sub Category</option>
+                                </select>
+                                {isNewSubCategory && (
+                                    <input
+                                        type="text"
+                                        name="newSubCategory"
+                                        placeholder="Enter new sub category name"
+                                        value={newSubCategory}
+                                        onChange={handleNewSubCategoryChange}
                                         required
                                         className="w-full mt-2 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     />

@@ -10,6 +10,11 @@ export const getAllProducts = async (req, res) => {
             query.category = category;
         }
 
+        const { subCategory } = req.query;
+        if (subCategory) {
+            query.subCategory = subCategory;
+        }
+
         if (search) {
             query.$or = [
                 { title: { $regex: search, $options: "i" } },
@@ -73,7 +78,25 @@ export const getProductById = async (req, res) => {
 
 export const getCategories = async (req, res) => {
     try {
-        const categories = await Product.distinct("category");
+        const categories = await Product.aggregate([
+            {
+                $group: {
+                    _id: "$category",
+                    subCategories: { $addToSet: "$subCategory" }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    name: "$_id",
+                    subCategories: 1
+                }
+            },
+            {
+                $sort: { name: 1 }
+            }
+        ]);
+
         return res.status(200).json({
             success: true,
             data: categories
@@ -88,9 +111,9 @@ export const getCategories = async (req, res) => {
 
 export const createProduct = async (req, res) => {
     try {
-        const { title, description, category, price, stock } = req.body;
+        const { title, description, category, subCategory, price, stock } = req.body;
 
-        if (!title || !description || !category || !price || !stock) {
+        if (!title || !description || !category || !subCategory || !price || !stock) {
             return res.status(400).json({
                 success: false,
                 message: "All fields are required"
@@ -110,6 +133,7 @@ export const createProduct = async (req, res) => {
             title,
             description,
             category,
+            subCategory,
             price: parseFloat(price),
             stock: parseInt(stock),
             images: imageUrls
@@ -131,7 +155,7 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, category, price, stock } = req.body;
+        const { title, description, category, subCategory, price, stock } = req.body;
 
         const product = await Product.findById(id);
         if (!product) {
@@ -159,6 +183,7 @@ export const updateProduct = async (req, res) => {
                 title: title || product.title,
                 description: description || product.description,
                 category: category || product.category,
+                subCategory: subCategory || product.category, // Assuming subCategory update logic follows similarity
                 price: price ? parseFloat(price) : product.price,
                 stock: stock ? parseInt(stock) : product.stock,
                 images: imageUrls

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
 import ProductCard from './Productcard';
+import ProductRow from './ProductRow';
 
 export const Products = () => {
     const [searchParams] = useSearchParams();
@@ -13,10 +14,26 @@ export const Products = () => {
     const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
     const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
+    const [groupedProducts, setGroupedProducts] = useState({});
+
     useEffect(() => {
-        fetchProducts();
         fetchCategories();
-    }, [page, selectedCategory, searchQuery]);
+    }, []);
+
+    useEffect(() => {
+        if (selectedCategory && !searchQuery) {
+            // Check if category has subcategories, if so fetch per subcategory
+            const currentCat = categories.find(c => c.name === selectedCategory);
+            if (currentCat && currentCat.subCategories && currentCat.subCategories.length > 0) {
+                fetchSubCategoryProducts(currentCat);
+            } else {
+                fetchProducts();
+            }
+        } else {
+            fetchProducts();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, selectedCategory, searchQuery, categories.length]); // added categories.length to retry if cats loaded late
 
     useEffect(() => {
         const category = searchParams.get('category');
@@ -39,9 +56,35 @@ export const Products = () => {
             if (response.success) {
                 setProducts(response.data.products);
                 setTotalPages(response.data.pages);
+                setGroupedProducts({}); // Clear grouped if switching to flat view
             }
         } catch (error) {
             console.error('Error fetching products:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchSubCategoryProducts = async (categoryObj) => {
+        setLoading(true);
+        try {
+            const promises = categoryObj.subCategories.map(async (sub) => {
+                // Fetch limit 10 for each subcategory row
+                const response = await apiClient.getProducts({ category: categoryObj.name, subCategory: sub, limit: 10 });
+                return { sub, products: response.success ? response.data.products : [] };
+            });
+
+            const results = await Promise.all(promises);
+            const newGrouped = {};
+            results.forEach(res => {
+                if (res.products.length > 0) {
+                    newGrouped[res.sub] = res.products;
+                }
+            });
+            setGroupedProducts(newGrouped);
+            setProducts([]); // Clear flat products
+        } catch (error) {
+            console.error('Error fetching subcats:', error);
         } finally {
             setLoading(false);
         }
@@ -67,26 +110,26 @@ export const Products = () => {
 
                 {/* Filters */}
                 <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex overflow-x-auto pb-2 no-scrollbar gap-2 w-full md:w-auto">
                         <button
                             onClick={() => setSelectedCategory('')}
-                            className={`px-4 py-2 rounded-md ${selectedCategory === ''
-                                    ? 'bg-purple-500 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            className={`px-4 py-2 rounded-md whitespace-nowrap flex-shrink-0 ${selectedCategory === ''
+                                ? 'bg-purple-500 text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                 }`}
                         >
                             All
                         </button>
-                        {categories.map((cat) => (
+                        {categories.map((catObj) => (
                             <button
-                                key={cat}
-                                onClick={() => setSelectedCategory(cat)}
-                                className={`px-4 py-2 rounded-md capitalize ${selectedCategory === cat
-                                        ? 'bg-purple-500 text-white'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                key={catObj.name}
+                                onClick={() => setSelectedCategory(catObj.name)}
+                                className={`px-4 py-2 rounded-md capitalize whitespace-nowrap flex-shrink-0 ${selectedCategory === catObj.name
+                                    ? 'bg-purple-500 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                     }`}
                             >
-                                {cat}
+                                {catObj.name}
                             </button>
                         ))}
                     </div>
@@ -97,11 +140,19 @@ export const Products = () => {
                     <div className="flex justify-center items-center py-20">
                         <div className="text-xl">Loading...</div>
                     </div>
-                ) : products.length === 0 ? (
+                ) : products.length === 0 && Object.keys(groupedProducts).length === 0 ? (
                     <div className="text-center py-20">
                         <p className="text-xl text-gray-500">No products found</p>
                     </div>
+                ) : Object.keys(groupedProducts).length > 0 ? (
+                    // Grouped View
+                    <div className="flex flex-col gap-8">
+                        {Object.keys(groupedProducts).map(subCat => (
+                            <ProductRow key={subCat} category={subCat} products={groupedProducts[subCat]} />
+                        ))}
+                    </div>
                 ) : (
+                    // Flat Grid View
                     <>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             {products.map((product) => (
@@ -115,8 +166,8 @@ export const Products = () => {
                             ))}
                         </div>
 
-                        {/* Pagination */}
-                        {totalPages > 1 && (
+                        {/* Pagination - Only show if in flat view and we have pages */}
+                        {products.length > 0 && totalPages > 1 && (
                             <div className="flex justify-center gap-2 mt-8">
                                 <button
                                     onClick={() => setPage(p => Math.max(1, p - 1))}

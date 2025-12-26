@@ -24,6 +24,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
+  const [activeMobileCategory, setActiveMobileCategory] = useState(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -216,7 +217,10 @@ export default function Navbar() {
 
           <div>
             <button
-              onClick={() => setProductsDropdownOpen(!productsDropdownOpen)}
+              onClick={() => {
+                setProductsDropdownOpen(!productsDropdownOpen);
+                if (productsDropdownOpen) setActiveMobileCategory(null); // Reset when closing
+              }}
               className="flex justify-between items-center w-full text-gray-700"
             >
               <span>Products</span>
@@ -228,24 +232,71 @@ export default function Navbar() {
             </button>
 
             {productsDropdownOpen && (
-              <div className="pl-4 flex flex-col gap-2 mt-2 border-l-2 border-gray-100">
-                <Link
-                  to="/products"
-                  onClick={() => setMenuOpen(false)}
-                  className="text-sm text-gray-600 hover:text-purple-600 block py-1"
-                >
-                  All Products
-                </Link>
-                {categories.map((category) => (
-                  <Link
-                    key={category}
-                    to={`/products?category=${category}`}
-                    onClick={() => setMenuOpen(false)}
-                    className="text-sm text-gray-600 hover:text-purple-600 capitalize block py-1"
-                  >
-                    {category}
-                  </Link>
-                ))}
+              <div className="pl-4 mt-2 border-l-2 border-gray-100 overflow-hidden transition-all duration-300 ease-in-out">
+                {!activeMobileCategory ? (
+                  // Level 1: List Categories
+                  <div className="animate-in fade-in slide-in-from-left-5 duration-300">
+                    <Link
+                      to="/products"
+                      onClick={() => setMenuOpen(false)}
+                      className="text-sm text-gray-600 hover:text-purple-600 block py-1"
+                    >
+                      All Products
+                    </Link>
+                    {categories.map((catObj) => (
+                      <button
+                        key={catObj.name}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Stop propagation just in case
+                          setActiveMobileCategory(catObj);
+                        }}
+                        className="flex justify-between items-center w-full text-sm text-gray-600 hover:text-purple-600 capitalize py-1 transition-colors duration-200"
+                      >
+                        <span>{catObj.name}</span>
+                        <ChevronRight size={14} />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  // Level 2: List Subcategories
+                  <div className="animate-in fade-in slide-in-from-right-5 duration-300 bg-gray-50 rounded-md p-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveMobileCategory(null);
+                      }}
+                      className="flex items-center gap-1 text-xs text-gray-500 mb-2 hover:text-purple-600 font-medium"
+                    >
+                      <ChevronRight size={12} className="rotate-180" /> Back
+                    </button>
+
+                    <Link
+                      to={`/products?category=${activeMobileCategory.name}`}
+                      onClick={() => setMenuOpen(false)}
+                      className="text-sm font-bold text-purple-600 block py-1 mb-1 border-b border-gray-200"
+                    >
+                      {activeMobileCategory.name}
+                    </Link>
+
+                    {activeMobileCategory.subCategories &&
+                      activeMobileCategory.subCategories.length > 0 ? (
+                      activeMobileCategory.subCategories.map((sub) => (
+                        <Link
+                          key={sub}
+                          to={`/products?category=${activeMobileCategory.name}&subCategory=${sub}`}
+                          onClick={() => setMenuOpen(false)}
+                          className="text-sm text-gray-600 hover:text-purple-600 capitalize block py-1 ml-2 transition-colors"
+                        >
+                          {sub}
+                        </Link>
+                      ))
+                    ) : (
+                      <span className="text-xs text-gray-400 italic ml-2">
+                        No subcategories
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
