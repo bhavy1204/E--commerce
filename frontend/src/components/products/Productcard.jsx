@@ -1,10 +1,10 @@
-export default function ProductCard({ title, price, img }) {
+export default function ProductCard({ title, price, img, className = "" }) {
     return (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col w-60 min-w-[240px]">
-            <div className="h-52 w-full overflow-hidden">
-                <img 
-                    src={img} 
-                    alt={title} 
+        <div className={`bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col w-full ${className}`}>
+            <div className="aspect-square w-full overflow-hidden">
+                <img
+                    src={img}
+                    alt={title}
                     className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                     loading="lazy"
                 />

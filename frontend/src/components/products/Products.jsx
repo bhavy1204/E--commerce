@@ -70,11 +70,10 @@ export const Products = () => {
                     <div className="flex flex-wrap gap-2">
                         <button
                             onClick={() => setSelectedCategory('')}
-                            className={`px-4 py-2 rounded-md ${
-                                selectedCategory === ''
+                            className={`px-4 py-2 rounded-md ${selectedCategory === ''
                                     ? 'bg-purple-500 text-white'
                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
+                                }`}
                         >
                             All
                         </button>
@@ -82,11 +81,10 @@ export const Products = () => {
                             <button
                                 key={cat}
                                 onClick={() => setSelectedCategory(cat)}
-                                className={`px-4 py-2 rounded-md capitalize ${
-                                    selectedCategory === cat
+                                className={`px-4 py-2 rounded-md capitalize ${selectedCategory === cat
                                         ? 'bg-purple-500 text-white'
                                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
+                                    }`}
                             >
                                 {cat}
                             </button>
@@ -105,7 +103,7 @@ export const Products = () => {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             {products.map((product) => (
                                 <Link key={product._id} to={`/product/${product._id}`}>
                                     <ProductCard

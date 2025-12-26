@@ -33,7 +33,7 @@ export const Categories = () => {
 
     return (
         <div className="px-4 md:px-20 py-10">
-            
+
             <h1 className="text-2xl md:text-3xl font-semibold mb-10">
                 Shop By <span className="text-purple-700">Categories</span>
             </h1>
@@ -51,13 +51,14 @@ export const Categories = () => {
                         </Link>
                     </div>
 
-                    <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-4">
+                    <div className="grid grid-cols-2 gap-4 md:flex md:space-x-4 md:overflow-x-auto md:no-scrollbar md:pb-4">
                         {categoryProducts[category]?.map((product) => (
                             <Link key={product._id} to={`/product/${product._id}`}>
                                 <ProductCard
                                     title={product.title}
                                     price={product.price}
                                     img={product.images[0]}
+                                    className="md:w-60 md:min-w-[240px]"
                                 />
                             </Link>
                         ))}

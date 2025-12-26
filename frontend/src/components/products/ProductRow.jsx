@@ -1,4 +1,4 @@
-import ProductCard from "./productcard"
+import ProductCard from "./Productcard"
 
 // temperory products 
 const items = [
@@ -19,7 +19,7 @@ const items = [
     { img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRlURuTLlVoomnPDnI30mFTomW4m9-Yr_qcAEI_zLjLmg2O8qFA-A-1mwyLqZqtw2ATRKK7iRjBUiVSuDHIlysQxXYknxsOqpp9JGNj5gQ", title: "office chairs", price: 500 },
 ]
 
-export default function ProductRow({ category}) {
+export default function ProductRow({ category }) {
     return (
         <div className="mb-20 mx-20 no-scrollbar">
             <h1 className="text-xl font-bold">{category}</h1>
@@ -30,6 +30,7 @@ export default function ProductRow({ category}) {
                         img={item.img}
                         title={item.title}
                         price={item.price}
+                        className="w-60 min-w-[240px]"
                     />
                 ))}
             </div>
