@@ -46,42 +46,51 @@ export const Checkout = () => {
             })
 
             const options = {
-                key: data.key,
-                amount: data.amount,
-                currency: data.currency,
-                name: 'Restaurant App',
-                description: 'Order Payment',
-                order_id: data.orderId,
-                handler: async (response) => {
-                    const orderPayload = {
-                        orderId: data.orderId,
-                        userEmail: user?.email,
-                        userName: `${formData.firstName} ${formData.lastName}`,
-                        userAddress: `${formData.address}, ${formData.city}, ${formData.state}, ${formData.zipCode}, ${formData.country}`,
-                        items: cart.map(item => ({
-                            description: item.product.title,
-                            quantity: item.quantity,
-                            price: item.product.price
-                        }))
-                    };
+              key: data.key,
+              amount: data.amount,
+              currency: data.currency,
 
-                    const verifyRes = await apiClient.request('/payment/verify', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            ...response,
-                            order: orderPayload
-                        }),
-                    });
+              name: "Whimsey Weavers",
+              description: "Secure Checkout",
 
-                    if (verifyRes.success) {
-                        await handlePaidOrder();
-                        alert('Payment successful!');
-                    } else {
-                        alert('Payment verification failed!');
-                    }
-                },
-                theme: { color: '#f97316' },
+              order_id: data.orderId,
+
+              handler: async (response) => {
+                const orderPayload = {
+                  orderId: data.orderId,
+                  userEmail: user?.email,
+                  userName: `${formData.firstName} ${formData.lastName}`,
+                  userAddress: `${formData.address}, ${formData.city}, ${formData.state}, ${formData.zipCode}, ${formData.country}`,
+                  items: cart.map((item) => ({
+                    description: item.product.title,
+                    quantity: item.quantity,
+                    price: item.product.price,
+                  })),
+                };
+
+                const verifyRes = await apiClient.request("/payment/verify", {
+                  method: "POST",
+                  body: JSON.stringify({
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_signature: response.razorpay_signature,
+                    order: orderPayload,
+                  }),
+                });
+
+                if (verifyRes.success) {
+                  await handlePaidOrder();
+                  alert("Payment successful!");
+                } else {
+                  alert("Payment verification failed!");
+                }
+              },
+
+              theme: {
+                color: "#7C3AED",
+              },
             };
+
 
             const paymentObject = new window.Razorpay(options);
             paymentObject.open();
