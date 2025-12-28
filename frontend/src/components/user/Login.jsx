@@ -105,6 +105,11 @@ export default function Login() {
             className="px-3 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
 
+          <div className="flex justify-end w-full">
+            <Link to="/forgot-password" className="text-sm text-purple-600 hover:text-purple-800">
+              Forgot Password?
+            </Link>
+          </div>
           <div className="flex items-center justify-between w-full">
             <Link to="/signup" className="text-sm text-blue-600 underline">
               Don't have an account? Sign up

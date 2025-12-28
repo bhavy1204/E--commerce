@@ -28,9 +28,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    authType: { 
-        type: String, 
-        default: 'local' 
+    authType: {
+        type: String,
+        default: 'local'
     },
     role: {
         type: String,
@@ -39,6 +39,12 @@ const userSchema = new mongoose.Schema({
     },
     refreshToken: {
         type: String
+    },
+    otp: {
+        type: String
+    },
+    otpExpiry: {
+        type: Date
     }
 }, { timestamps: true });
 

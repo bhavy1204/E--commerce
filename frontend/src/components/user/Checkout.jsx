@@ -9,16 +9,16 @@ export const Checkout = () => {
     const { cart, getTotal, clearCart } = useCart();
     const navigate = useNavigate();
     const location = useLocation();
-    const { couponCode, discountAmount } = location.state || {};
+    const { couponCode, discountAmount, shippingState, shippingCost } = location.state || {}; // Add shipping props
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
         address: '',
         city: '',
-        state: '',
+        state: shippingState || '', // Pre-fill state
         zipCode: '',
-        country: '',
+        country: 'India', // Enforce India
         phone: ''
     });
 
@@ -39,7 +39,7 @@ export const Checkout = () => {
         }
 
         try {
-            const amount = getTotal() - (discountAmount || 0); // total in rupees
+            const amount = getTotal() - (discountAmount || 0) + (shippingCost || 0); // Include shipping
             const data = await apiClient.request('/payment/create-order', {
                 method: "POST",
                 body: JSON.stringify({ amount })
@@ -100,7 +100,9 @@ export const Checkout = () => {
             shippingAddress: formData,
             paymentMethod: 'razorpay',
             paymentStatus: 'paid',
-            couponCode
+            couponCode,
+            shippingCost, // Pass shipping cost to backend if needed? The user didn't specify backend changes. I'll rely on total amount paid.
+            totalAmount: getTotal() - (discountAmount || 0) + (shippingCost || 0)
         };
 
         const response = await apiClient.createOrder(orderData);
@@ -130,7 +132,9 @@ export const Checkout = () => {
                 })),
                 shippingAddress: formData,
                 paymentMethod: 'cod',
-                couponCode
+                couponCode,
+                shippingCost,
+                totalAmount: getTotal() - (discountAmount || 0) + (shippingCost || 0)
             };
 
             const response = await apiClient.createOrder(orderData);
@@ -203,7 +207,8 @@ export const Checkout = () => {
                                 value={formData.state}
                                 onChange={handleChange}
                                 required
-                                className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                readOnly // Make state read-only to prevent shipping cost mismatch
+                                className="px-4 py-2 border rounded-md bg-gray-100 focus:outline-none cursor-not-allowed"
                             />
                         </div>
 
@@ -224,7 +229,8 @@ export const Checkout = () => {
                                 value={formData.country}
                                 onChange={handleChange}
                                 required
-                                className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                readOnly // Make country read-only
+                                className="px-4 py-2 border rounded-md bg-gray-100 focus:outline-none cursor-not-allowed"
                             />
                         </div>
 
@@ -239,20 +245,22 @@ export const Checkout = () => {
                         />
 
 
-                        <button
+                        {/* COD Button Removed as per request */}
+                        {/* <button
                             type="submit"
                             disabled={loading}
                             className="w-full bg-purple-500 text-white py-3 rounded-md hover:bg-purple-600 font-semibold text-lg disabled:opacity-50 mb-2"
                         >
                             {loading ? 'Processing...' : 'Place COD Order'}
-                        </button>
+                        </button> */}
+
                         <button
                             onClick={startRazorpay}
                             type='button'
                             disabled={loading || !formData.firstName}
-                            className="w-full bg-purple-500 text-white py-3 rounded-md hover:bg-purple-600 font-semibold text-lg disabled:opacity-50"
+                            className="w-full bg-purple-500 text-white py-3 rounded-md hover:bg-purple-600 font-semibold text-lg disabled:opacity-50 shadow-lg transform transition hover:scale-105"
                         >
-                            {loading ? 'Processing...' : 'Continue with Razorpay'}
+                            {loading ? 'Processing...' : 'Pay Securely Now'}
                         </button>
                     </form>
 
@@ -269,22 +277,28 @@ export const Checkout = () => {
                                     </div>
                                 ))}
                                 <div className="border-t pt-4 flex justify-between text-xl font-bold">
-                                    <span>Total</span>
+                                    <span>Subtotal</span>
                                     <span>₹{getTotal()}</span>
                                 </div>
 
                                 {discountAmount > 0 && (
-                                    <>
-                                        <div className="flex justify-between text-green-600">
-                                            <span>Discount ({couponCode})</span>
-                                            <span>-₹{discountAmount}</span>
-                                        </div>
-                                        <div className="border-t pt-4 flex justify-between text-xl font-bold">
-                                            <span>Final Total</span>
-                                            <span>₹{getTotal() - discountAmount}</span>
-                                        </div>
-                                    </>
+                                    <div className="flex justify-between text-green-600">
+                                        <span>Discount ({couponCode})</span>
+                                        <span>-₹{discountAmount}</span>
+                                    </div>
                                 )}
+
+                                {shippingCost > 0 && (
+                                    <div className="flex justify-between">
+                                        <span>Shipping</span>
+                                        <span>+₹{shippingCost}</span>
+                                    </div>
+                                )}
+
+                                <div className="border-t pt-4 flex justify-between text-xl font-bold">
+                                    <span>Final Total</span>
+                                    <span>₹{getTotal() - (discountAmount || 0) + (shippingCost || 0)}</span>
+                                </div>
                             </div>
                         </div>
                     </div>

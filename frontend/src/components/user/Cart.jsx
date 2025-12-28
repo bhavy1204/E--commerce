@@ -12,6 +12,30 @@ export const Cart = () => {
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [couponError, setCouponError] = useState('');
     const [couponSuccess, setCouponSuccess] = useState('');
+    const [shippingState, setShippingState] = useState('');
+
+    const indianStates = [
+        "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",
+        "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli", "Daman and Diu", "Delhi", "Goa",
+        "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka",
+        "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
+        "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim",
+        "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
+    ];
+
+    const getShippingCost = () => {
+        if (!shippingState) return 0;
+
+        const lowerState = shippingState.toLowerCase();
+
+        if (lowerState === 'rajasthan') return 60;
+        if (lowerState === 'gujarat') return 100;
+
+        const southStates = ['tamil nadu', 'kerala', 'karnataka', 'andhra pradesh', 'telangana'];
+        if (southStates.includes(lowerState)) return 160;
+
+        return 120;
+    };
 
     const handleApplyCoupon = async () => {
         if (!couponCode.trim()) return;
@@ -41,7 +65,7 @@ export const Cart = () => {
     };
 
     const getFinalTotal = () => {
-        return getTotal() - getDiscountAmount();
+        return getTotal() - getDiscountAmount() + getShippingCost();
     };
 
     const handleCheckout = () => {
@@ -49,10 +73,16 @@ export const Cart = () => {
             navigate('/login');
             return;
         }
+        if (!shippingState) {
+            alert("Please select a shipping state to proceed.");
+            return;
+        }
         navigate('/checkout', {
             state: {
                 couponCode: appliedCoupon ? appliedCoupon.code : null,
-                discountAmount: getDiscountAmount()
+                discountAmount: getDiscountAmount(),
+                shippingState: shippingState,
+                shippingCost: getShippingCost()
             }
         });
     };
@@ -165,10 +195,26 @@ export const Cart = () => {
                                     </div>
                                 )}
 
-                                <div className="flex justify-between">
-                                    <span>Shipping</span>
-                                    <span>Free</span>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex justify-between items-center">
+                                        <span>Shipping</span>
+                                        <span>{shippingState ? `₹${getShippingCost()}` : '-'}</span>
+                                    </div>
+                                    <select
+                                        value={shippingState}
+                                        onChange={(e) => setShippingState(e.target.value)}
+                                        className="w-full border rounded-md px-3 py-2 text-sm mt-1"
+                                    >
+                                        <option value="">Select State</option>
+                                        {indianStates.map(state => (
+                                            <option key={state} value={state}>{state}</option>
+                                        ))}
+                                    </select>
+                                    <Link to="/shipping-policy" className="text-xs text-purple-600 hover:text-purple-700 text-right">
+                                        View Shipping Policy
+                                    </Link>
                                 </div>
+
                                 <div className="border-t pt-4 flex justify-between text-xl font-bold">
                                     <span>Total</span>
                                     <span>₹{getFinalTotal()}</span>

@@ -4,6 +4,7 @@ import { Order } from "../models/order.model.js";
 import { uploadMultipleToCloudinary } from "../utils/cloudinary.js";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
+import { sendEmail } from "../utils/email.js";
 
 // Initialize Google client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -250,6 +251,122 @@ export const getCurrentUser = async (req, res) => {
             success: false,
             message: error.message || "Error fetching user"
         });
+    }
+};
+
+
+export const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Email is required" });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        // Generate 6 digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.otp = otp;
+        user.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+        await user.save({ validateBeforeSave: false });
+
+        const emailHtml = `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2>Password Reset Request</h2>
+                <p>Your OTP for password reset is:</p>
+                <h1 style="color: #6d28d9; letter-spacing: 5px;">${otp}</h1>
+                <p>This OTP is valid for 10 minutes.</p>
+                <p>If you didn't request this, please ignore this email.</p>
+            </div>
+        `;
+
+        await sendEmail({
+            to: email,
+            subject: "Password Reset OTP - Whimsy Weavers",
+            html: emailHtml
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "OTP sent to your email"
+        });
+
+    } catch (error) {
+        console.error("Forgot Password Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error sending OTP"
+        });
+    }
+};
+
+export const verifyOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        if (!email || !otp) {
+            return res.status(400).json({ success: false, message: "Email and OTP are required" });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        if (!user.otp || !user.otpExpiry) {
+            return res.status(400).json({ success: false, message: "Invalid request" });
+        }
+
+        if (user.otp !== otp) {
+            return res.status(400).json({ success: false, message: "Invalid OTP" });
+        }
+
+        if (Date.now() > user.otpExpiry) {
+            return res.status(400).json({ success: false, message: "OTP expired" });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "OTP verified successfully"
+        });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Error verifying OTP" });
+    }
+};
+
+export const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+
+        if (!email || !otp || !newPassword) {
+            return res.status(400).json({ success: false, message: "All fields are required" });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        // Verify OTP again to be secure
+        if (user.otp !== otp || Date.now() > user.otpExpiry) {
+            return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+        }
+
+        user.password = newPassword; // Pre-save hook will hash this
+        user.otp = undefined;
+        user.otpExpiry = undefined;
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Password reset successfully. Please login with new password."
+        });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Error resetting password" });
     }
 };
 

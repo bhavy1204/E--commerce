@@ -16,6 +16,13 @@ import { Checkout } from './components/user/Checkout'
 import { Orders } from './components/user/Orders'
 // import OrderDetail from './components/user/OrderDetail'
 import { AdminPanel } from './components/admin/AdminPanel'
+import { PrivacyPolicy } from './components/legal/PrivacyPolicy'
+import { ShippingPolicy } from './components/legal/ShippingPolicy'
+import { ForgotPassword } from './components/user/ForgotPassword'
+import { VerifyOtp } from './components/user/VerifyOtp'
+import { ResetPassword } from './components/user/ResetPassword'
+import { TermsAndConditions } from './components/legal/TermsAndConditions'
+import { RefundPolicy } from './components/legal/RefundPolicy'
 
 function App() {
 
@@ -39,6 +46,13 @@ function App() {
             <Route path="/orders" element={<Orders />} />
             {/* <Route path="/orders/:orderId" element={<OrderDetail />} /> */}
             <Route path="/admin/*" element={<AdminPanel />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/shipping-policy" element={<ShippingPolicy />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/verify-otp" element={<VerifyOtp />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
           </Routes>
         </main>
         <Footer />
