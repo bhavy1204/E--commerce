@@ -112,7 +112,7 @@ export default function Login() {
           </div>
           <div className="flex items-center justify-between w-full">
             <Link to="/signup" className="text-sm text-blue-600 underline">
-              Don't have an account? Sign up
+              Sign up
             </Link>
             <button
               type="submit"

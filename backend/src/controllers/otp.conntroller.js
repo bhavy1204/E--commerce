@@ -29,7 +29,7 @@ export const sendEmailOtp = async (req, res) => {
         });
 
         await resend.emails.send({
-            from: "Whimsey Weavers <onboarding@resend.dev>",
+            from: "Whimsey Weavers <no-reply@whimseyweavers.co.in>",
             to: email,
             subject: "Verify your email",
             html: `

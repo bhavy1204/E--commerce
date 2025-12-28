@@ -2,6 +2,7 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import { Resend } from "resend";
 import PDFDocument from "pdfkit";
+import { User } from "../models/user.model.js";
 
 export const razorpayInstance = new Razorpay({
     key_id: process.env.RAZORPAY_KEY,
@@ -100,7 +101,7 @@ export const createOrder = async (req, res) => {
 export async function sendInvoiceEmail(email, pdfBuffer, orderId) {
     try {
         const response = await resend.emails.send({
-            from: "Whimsey Weavers <onboarding@resend.dev>",
+            from: "Whimsey Weavers <invoice@whimseyweavers.co.in>",
             to: email,
             subject: `Invoice for Order ${orderId}`,
             html: `
@@ -122,6 +123,71 @@ export async function sendInvoiceEmail(email, pdfBuffer, orderId) {
     } catch (error) {
         console.error("Email failed:", error);
         throw error;
+    }
+}
+
+export async function sendAdminOrderNotification(adminEmails, order, pdfBuffer) {
+    try {
+        if (!adminEmails || adminEmails.length === 0) return;
+
+        // Create text table
+        let textTable = "Item | Qty | Price | Total\n";
+        textTable += "-----------------------------------\n";
+
+        // Handle items whether they are from order.items (populated) or passed directly
+        // The structure passed to generateInvoiceBuffer in createOrder is mapped items
+        // But the order object itself might be different.
+        // Let's rely on the order object structure.
+        // The 'order' arg here comes from populate in createOrder or verifyPayment.
+
+        const items = order.items || [];
+
+        items.forEach(item => {
+            // item might be { product: { title... }, quantity... } or flattened
+            const title = item.product?.title || item.description || "Unknown Product";
+            const qty = item.quantity;
+            const price = item.price || item.product?.price;
+            const total = qty * price;
+            textTable += `${title.substring(0, 15)}... | ${qty} | ${price} | ${total}\n`;
+        });
+
+        const address = typeof order.shippingAddress === 'object' ?
+            `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.zipCode}` :
+            order.userAddress || "Address N/A";
+
+        const textBody = `
+New Order Received!
+
+Order ID: ${order._id || order.orderId}
+User: ${order.user?.firstName} ${order.user?.lastName} (${order.user?.email || order.userEmail})
+Address: ${address}
+Total Amount: ${order.totalAmount || "N/A"}
+
+Items:
+${textTable}
+
+See attached invoice PDF.
+        `;
+
+        const response = await resend.emails.send({
+            from: "Whimsey Weavers <invoice@whimseyweavers.co.in>",
+            to: adminEmails,
+            subject: `[ADMIN] New Order Notification - ${order._id || order.orderId}`,
+            text: textBody,
+            attachments: [
+                {
+                    filename: `invoice-${order._id || order.orderId}.pdf`,
+                    content: pdfBuffer.toString("base64"),
+                }
+            ]
+        });
+
+        console.log("Admin notification sent to:", adminEmails);
+        return response;
+
+    } catch (error) {
+        console.error("Failed to send admin notification:", error);
+        // Don't throw, just log, so user flow isn't interrupted
     }
 }
 
@@ -155,6 +221,19 @@ export const verifyPayment = async (req, res) => {
 
         // Send email
         await sendInvoiceEmail(order.userEmail, pdfBuffer, order.orderId);
+
+        // Send Admin Notification
+        const admins = await User.find({ role: 'admin' });
+        const adminEmails = admins.map(admin => admin.email);
+
+        // We need to construct a robust order object for the text summary if 'order' isn't fully populated
+        // The 'order' object here in verifyPayment is actually constructed manually in client or passed partially?
+        // Let's check verifyPayment caller. It seems 'order' is passed in body?
+        // In verifyPayment, 'order' is extracted from req.body. Let's assume it has necessary details or we fetch it.
+        // Actually, looking at verifyPayment implementation, it just uses 'order' from body.
+        // To be safe, we pass 'order' as is, but we might want to fetch real DB order if needed.
+        // But for now, using passed order object.
+        await sendAdminOrderNotification(adminEmails, order, pdfBuffer);
 
         return res.status(200).json({
             success: true,

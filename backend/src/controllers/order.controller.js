@@ -1,9 +1,10 @@
-import { generateInvoiceBuffer, sendInvoiceEmail } from "./payment.controller.js";
+import { generateInvoiceBuffer, sendInvoiceEmail, sendAdminOrderNotification } from "./payment.controller.js";
 import path from "path";
 import fs from "fs";
 import { Product } from "../models/product.model.js";
 import { Order } from "../models/order.model.js";
 import { Coupon } from "../models/coupon.model.js";
+import { User } from "../models/user.model.js";
 
 export const createOrder = async (req, res) => {
     try {
@@ -152,6 +153,11 @@ export const createOrder = async (req, res) => {
             pdfBuffer,
             order._id.toString()
         );
+
+        // Send Admin Notification
+        const admins = await User.find({ role: 'admin' });
+        const adminEmails = admins.map(admin => admin.email);
+        await sendAdminOrderNotification(adminEmails, populatedOrder, pdfBuffer);
 
         console.log("✅ COD Invoice Email sent:", order._id.toString());
 
