@@ -29,13 +29,14 @@ export const sendEmailOtp = async (req, res) => {
         });
 
         await resend.emails.send({
-            from: "Whimsey Weavers <no-reply@whimseyweavers.co.in>",
+            from: "Whimsey Weavers <auth@whimseyweavers.co.in>",
             to: email,
             subject: "Verify your email",
             html: `
                 <h2>Email Verification</h2>
                 <p>Your OTP is <b>${otp}</b></p>
                 <p>This OTP is valid for 5 minutes.</p>
+                <p> If this wasn’t you, reply to this email. </p>
             `
         });
 
