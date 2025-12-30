@@ -57,7 +57,7 @@ export const Cart = () => {
         const subtotal = getTotal();
         let discount = 0;
         if (appliedCoupon.discountType === 'percentage') {
-            discount = ((subtotal + getShippingCost()) * appliedCoupon.discountValue) / 100;
+            discount = (subtotal * appliedCoupon.discountValue) / 100;
         } else {
             discount = appliedCoupon.discountValue;
         }

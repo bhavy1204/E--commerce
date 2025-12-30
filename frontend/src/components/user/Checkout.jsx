@@ -10,7 +10,9 @@ export const Checkout = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation(); // Ensure location is defined
-    const { couponCode, discountAmount, shippingState, shippingCost } = location.state || {}; // Add shipping props
+    const { couponCode, discountAmount, shippingState, shippingCost: initialShippingCost } = location.state || {}; // Add shipping props
+    const [termsAccepted, setTermsAccepted] = useState(false);
+    const [expressDelivery, setExpressDelivery] = useState(false);
 
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -23,6 +25,9 @@ export const Checkout = () => {
         country: 'India', // Enforce India
         phone: ''
     });
+
+    // Calculate dynamic shipping cost
+    const shippingCost = expressDelivery ? 180 : (initialShippingCost || 0);
 
     const loadRazorpayScript = () => new Promise((resolve) => {
         if (window.Razorpay) return resolve(true);
@@ -41,7 +46,7 @@ export const Checkout = () => {
         }
 
         try {
-            const amount = getTotal() - (discountAmount || 0) + (shippingCost || 0); // Include shipping
+            const amount = getTotal() - (discountAmount || 0) + shippingCost; // Include dynamic shipping
             const data = await apiClient.request('/payment/create-order', {
                 method: "POST",
                 body: JSON.stringify({ amount })
@@ -90,7 +95,7 @@ export const Checkout = () => {
                         // We need the new orderId from backend response
                         clearCart();
                         alert("Payment successful!");
-                        navigate(`/orders/${verifyRes.orderId}`);
+                        navigate(`/orders`);
                     } else {
                         alert("Payment verification failed!");
                     }
@@ -135,13 +140,13 @@ export const Checkout = () => {
                 paymentMethod: 'cod',
                 couponCode,
                 shippingCost,
-                totalAmount: getTotal() - (discountAmount || 0) + (shippingCost || 0)
+                totalAmount: getTotal() - (discountAmount || 0) + shippingCost
             };
 
             const response = await apiClient.createOrder(orderData);
             if (response.success) {
                 clearCart();
-                navigate(`/orders/${response.data._id}`);
+                navigate(`/orders`);
             }
         } catch (error) {
             alert(error.message || 'Order failed. Please try again.');
@@ -246,6 +251,33 @@ export const Checkout = () => {
                         />
 
 
+
+                        <div className="mb-6 space-y-3">
+                            <label className="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    checked={termsAccepted}
+                                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                />
+                                <span className="text-sm text-gray-700">
+                                    I agree to the <a href="/shipping-policy" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">Shipping Policy</a>
+                                </span>
+                            </label>
+
+                            <label className="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    checked={expressDelivery}
+                                    onChange={(e) => setExpressDelivery(e.target.checked)}
+                                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                />
+                                <span className="text-sm text-gray-700">
+                                    Express Delivery (Flat ₹180)
+                                </span>
+                            </label>
+                        </div>
+
                         {/* COD Button Removed as per request */}
                         {/* <button
                             type="submit"
@@ -258,7 +290,7 @@ export const Checkout = () => {
                         <button
                             onClick={startRazorpay}
                             type='button'
-                            disabled={loading || !formData.firstName}
+                            disabled={loading || !formData.firstName || !termsAccepted}
                             className="w-full bg-purple-500 text-white py-3 rounded-md hover:bg-purple-600 font-semibold text-lg disabled:opacity-50 shadow-lg transform transition hover:scale-105"
                         >
                             {loading ? 'Processing...' : 'Pay Securely Now'}
@@ -298,7 +330,7 @@ export const Checkout = () => {
 
                                 <div className="border-t pt-4 flex justify-between text-xl font-bold">
                                     <span>Final Total</span>
-                                    <span>₹{getTotal() - (discountAmount || 0) + (shippingCost || 0)}</span>
+                                    <span>₹{getTotal() - (discountAmount || 0) + shippingCost}</span>
                                 </div>
                             </div>
                         </div>

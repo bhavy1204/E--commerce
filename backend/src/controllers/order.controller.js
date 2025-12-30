@@ -92,7 +92,7 @@ export const createOrder = async (req, res) => {
             appliedCoupon = coupon;
 
             if (coupon.discountType === 'percentage') {
-                discountAmount = (totalAmount * coupon.discountValue) / 100;
+                discountAmount = (totalAmount * coupon.discountValue) / 100; // Calculate on product total only
             } else {
                 discountAmount = coupon.discountValue;
             }

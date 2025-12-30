@@ -306,7 +306,7 @@ export const verifyPayment = async (req, res) => {
                 const subTotal = totalAmount + shippingCost;
 
                 if (coupon.discountType === 'percentage') {
-                    discountAmount = (subTotal * coupon.discountValue) / 100;
+                    discountAmount = (totalAmount * coupon.discountValue) / 100; // Calculate on product total only
                 } else {
                     discountAmount = coupon.discountValue;
                 }
