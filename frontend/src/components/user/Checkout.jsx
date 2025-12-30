@@ -332,6 +332,18 @@ export const Checkout = () => {
                                     <span>Final Total</span>
                                     <span>₹{getTotal() - (discountAmount || 0) + shippingCost}</span>
                                 </div>
+
+                                <div className="border-t pt-4 text-center">
+                                    <p className="text-gray-600 font-semibold">Estimated Delivery</p>
+                                    <p className="text-purple-600 font-bold text-lg">
+                                        {(() => {
+                                            const daysToAdd = expressDelivery ? 9 : 14;
+                                            const date = new Date();
+                                            date.setDate(date.getDate() + daysToAdd);
+                                            return date.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                                        })()}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>

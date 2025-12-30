@@ -83,6 +83,15 @@ const deleteCoupon = async (req, res) => {
 const validateCoupon = async (req, res) => {
     try {
         const { code } = req.body;
+
+        // Ensure user is authenticated
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({
+                success: false,
+                message: "Please login to apply coupon"
+            });
+        }
+
         const userId = req.user._id;
 
         if (!code) {

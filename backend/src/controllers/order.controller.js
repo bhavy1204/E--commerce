@@ -143,11 +143,13 @@ export const createOrder = async (req, res) => {
             userName: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
             userAddress: `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.zipCode}, ${shippingAddress.country}`,
             userEmail: populatedOrder.user.email,
+            userPhone: shippingAddress.phone,
             items: populatedOrder.items.map(item => ({
                 description: item.product.title,
                 quantity: item.quantity,
                 price: item.price
-            }))
+            })),
+            grandTotal: totalAmount
         });
 
         // console.log("Populated order", populatedOrder);

@@ -11,7 +11,7 @@ export const razorpayInstance = new Razorpay({
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export function generateInvoiceBuffer({ orderId, userName, userAddress, userEmail, items }) {
+export function generateInvoiceBuffer({ orderId, userName, userAddress, userEmail, userPhone, items, grandTotal }) {
     return new Promise((resolve, reject) => {
         try {
             const doc = new PDFDocument({ margin: 50 });
@@ -23,43 +23,84 @@ export function generateInvoiceBuffer({ orderId, userName, userAddress, userEmai
                 resolve(pdfBuffer);
             });
 
-            doc.fontSize(20).font("Helvetica-Bold").text("WHIMSEY WEAVERS", 50, 50);
-            doc.fontSize(10).font("Helvetica").text("Somewhere in India", 50, 75);
+            // --- HEADER ---
+            // Logo (Text) on Left
+            doc.fontSize(24).font("Helvetica-Bold").text("WHIMSEY WEAVERS", 50, 50);
+            doc.fontSize(10).font("Helvetica").text("123 Fashion Street, Creative City", 50, 80);
+            doc.text("India - 110001", 50, 95);
+            doc.text("support@whimseyweavers.co.in", 50, 110);
 
-            doc.fontSize(16).font("Helvetica-Bold").text(`INVOICE #${orderId}`, 50, 120);
-            doc.fontSize(10).font("Helvetica").text(`Date: ${new Date().toLocaleDateString()}`, 50, 140);
+            // Invoice Details on Right
+            const invoiceDetailsX = 400;
+            doc.fontSize(16).font("Helvetica-Bold").text("INVOICE", invoiceDetailsX, 50, { align: 'right' });
+            doc.fontSize(10).font("Helvetica").text(`Invoice #: ${orderId}`, invoiceDetailsX, 80, { align: 'right' });
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, invoiceDetailsX, 95, { align: 'right' });
 
-            doc.fontSize(12).font("Helvetica-Bold").text("Bill To:", 50, 180);
-            doc.fontSize(10).font("Helvetica")
-                .text(userName, 50, 200)
-                .text(userEmail, 50, 215)
-                .text(userAddress, 50, 230);
+            // --- USER DETAILS (BILL TO) ---
+            doc.fontSize(12).font("Helvetica-Bold").text("Bill To:", 50, 160);
 
-            const tableTop = 280;
-            doc.fontSize(10).font("Helvetica-Bold")
-                .text("Description", 50, tableTop)
-                .text("Quantity", 250, tableTop)
-                .text("Price", 350, tableTop)
-                .text("Amount", 450, tableTop);
+            // Name
+            doc.fontSize(10).font("Helvetica").text(userName, 50, 180);
 
-            let y = tableTop + 20;
-            let totalAmount = 0;
+            // Address (Split if long)
+            const addressY = 195;
+            doc.text(userAddress, 50, addressY, { width: 250 });
+
+            // Contact
+            doc.text(`Email: ${userEmail}`, 50, addressY + 40);
+            if (userPhone) {
+                doc.text(`Phone: ${userPhone}`, 50, addressY + 55);
+            }
+
+            // --- ITEMS TABLE ---
+            const tableTop = 300;
+            const itemX = 50;
+            const qtyX = 300;
+            const priceX = 370;
+            const totalX = 470;
+
+            // Table Headers
+            doc.font("Helvetica-Bold");
+            doc.text("Item Description", itemX, tableTop);
+            doc.text("Qty", qtyX, tableTop);
+            doc.text("Price", priceX, tableTop);
+            doc.text("Total", totalX, tableTop);
+
+            // Draw line below headers
+            doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
+
+            // Table Rows
+            let y = tableTop + 30;
+            doc.font("Helvetica");
 
             items.forEach(item => {
                 const amount = item.quantity * item.price;
-                totalAmount += amount;
 
-                doc.fontSize(10).font("Helvetica")
-                    .text(item.description, 50, y)
-                    .text(item.quantity.toString(), 250, y)
-                    .text(`₹${item.price.toFixed(2)}`, 350, y)
-                    .text(`₹${amount.toFixed(2)}`, 450, y);
+                doc.text(item.description, itemX, y, { width: 240 });
+                doc.text(item.quantity.toString(), qtyX, y);
+                doc.text(`₹${item.price.toFixed(2)}`, priceX, y);
+                doc.text(`₹${amount.toFixed(2)}`, totalX, y);
 
                 y += 20;
             });
 
-            doc.fontSize(12).font("Helvetica-Bold")
-                .text(`Total: ₹${totalAmount.toFixed(2)}`, 350, y + 20);
+            // Draw line below items
+            doc.moveTo(50, y).lineTo(550, y).stroke();
+
+            // --- GRAND TOTAL ---
+            y += 20;
+            const totalsX = 350;
+
+            // We can calculate subtotal here or use grandTotal passed in
+            // Assuming grandTotal is the final payable amount
+
+            doc.font("Helvetica-Bold").fontSize(14);
+            doc.text("Grand Total:", totalsX, y, { align: 'left' });
+            doc.text(`₹${grandTotal.toFixed(2)}`, totalX, y, { align: 'left' }); // Align with column
+
+            // Footer
+            doc.fontSize(10).font("Helvetica").text("Thank you for your business!", 50, 700, { align: "center", width: 500 });
+
 
             doc.end();
 
@@ -356,13 +397,15 @@ export const verifyPayment = async (req, res) => {
         const pdfBuffer = await generateInvoiceBuffer({
             orderId: newOrder._id.toString(),
             userName: userName,
-            userAddress: `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.zipCode}`, // Simple string for PDF
+            userAddress: `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.zipCode}`,
             userEmail: userEmail,
+            userPhone: shippingAddress.phone,
             items: populatedOrder.items.map(item => ({
                 description: item.product.title,
                 quantity: item.quantity,
                 price: item.price
-            }))
+            })),
+            grandTotal: finalTotal
         });
 
         // Send Email
