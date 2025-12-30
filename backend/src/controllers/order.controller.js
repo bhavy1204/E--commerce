@@ -8,7 +8,7 @@ import { User } from "../models/user.model.js";
 
 export const createOrder = async (req, res) => {
     try {
-        const { items, shippingAddress, paymentId, paymentMethod = 'cod', couponCode } = req.body;
+        const { items, shippingAddress, paymentId, paymentMethod = 'cod', couponCode, shippingCost = 0 } = req.body;
 
         console.log("REQ BODY:", req.body);
 
@@ -54,6 +54,9 @@ export const createOrder = async (req, res) => {
                 price: product.price
             });
         }
+
+        // Add shipping cost to total amount BEFORE discount calculation
+        totalAmount += shippingCost;
 
         let discountAmount = 0;
         let appliedCoupon = null;
@@ -111,7 +114,9 @@ export const createOrder = async (req, res) => {
             paymentStatus: paymentId ? 'paid' : 'pending',
             paymentMethod: paymentMethod || 'cod',
             coupon: appliedCoupon ? appliedCoupon._id : undefined,
-            discountAmount
+            coupon: appliedCoupon ? appliedCoupon._id : undefined,
+            discountAmount,
+            shippingCost
         });
 
         if (appliedCoupon) {

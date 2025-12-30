@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
-import { useCart } from '../../context/AuthContext';
+import { useCart, useAuth } from '../../context/AuthContext';
 
 
 
 export const Checkout = () => {
     const { cart, getTotal, clearCart } = useCart();
+    const { user } = useAuth();
     const navigate = useNavigate();
-    const location = useLocation();
+    const location = useLocation(); // Ensure location is defined
     const { couponCode, discountAmount, shippingState, shippingCost } = location.state || {}; // Add shipping props
+
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         firstName: '',
@@ -46,49 +48,57 @@ export const Checkout = () => {
             })
 
             const options = {
-              key: data.key,
-              amount: data.amount,
-              currency: data.currency,
+                key: data.key,
+                amount: data.amount,
+                currency: data.currency,
 
-              name: "Whimsey Weavers",
-              description: "Secure Checkout",
+                name: "Whimsey Weavers",
+                description: "Secure Checkout",
 
-              order_id: data.orderId,
+                order_id: data.orderId,
 
-              handler: async (response) => {
-                const orderPayload = {
-                  orderId: data.orderId,
-                  userEmail: user?.email,
-                  userName: `${formData.firstName} ${formData.lastName}`,
-                  userAddress: `${formData.address}, ${formData.city}, ${formData.state}, ${formData.zipCode}, ${formData.country}`,
-                  items: cart.map((item) => ({
-                    description: item.product.title,
-                    quantity: item.quantity,
-                    price: item.product.price,
-                  })),
-                };
+                handler: async (response) => {
+                    const orderPayload = {
+                        userId: user?._id || user?.id,
+                        userEmail: user?.email,
+                        userName: `${formData.firstName} ${formData.lastName}`,
+                        shippingAddress: formData, // Send full object
+                        shippingCost,
+                        couponCode,
+                        amount: data.amount,
+                        items: cart.map((item) => ({
+                            productId: item.productId, // CRITICAL: Send productId for backend stock update
+                            description: item.product.title,
+                            quantity: item.quantity,
+                            price: item.product.price,
+                        })),
+                    };
 
-                const verifyRes = await apiClient.request("/payment/verify", {
-                  method: "POST",
-                  body: JSON.stringify({
-                    razorpay_payment_id: response.razorpay_payment_id,
-                    razorpay_order_id: response.razorpay_order_id,
-                    razorpay_signature: response.razorpay_signature,
-                    order: orderPayload,
-                  }),
-                });
+                    const verifyRes = await apiClient.request("/payment/verify", {
+                        method: "POST",
+                        body: JSON.stringify({
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature,
+                            order: orderPayload,
+                        }),
+                    });
 
-                if (verifyRes.success) {
-                  await handlePaidOrder();
-                  alert("Payment successful!");
-                } else {
-                  alert("Payment verification failed!");
-                }
-              },
+                    if (verifyRes.success) {
+                        // Order is already created in backend during verify
+                        // Just clear cart and redirect
+                        // We need the new orderId from backend response
+                        clearCart();
+                        alert("Payment successful!");
+                        navigate(`/orders/${verifyRes.orderId}`);
+                    } else {
+                        alert("Payment verification failed!");
+                    }
+                },
 
-              theme: {
-                color: "#7C3AED",
-              },
+                theme: {
+                    color: "#7C3AED",
+                },
             };
 
 
@@ -100,26 +110,8 @@ export const Checkout = () => {
         }
     };
 
-    const handlePaidOrder = async () => {
-        const orderData = {
-            items: cart.map(item => ({
-                productId: item.productId,
-                quantity: item.quantity
-            })),
-            shippingAddress: formData,
-            paymentMethod: 'razorpay',
-            paymentStatus: 'paid',
-            couponCode,
-            shippingCost, // Pass shipping cost to backend if needed? The user didn't specify backend changes. I'll rely on total amount paid.
-            totalAmount: getTotal() - (discountAmount || 0) + (shippingCost || 0)
-        };
+    // handlePaidOrder removed as backend creates order now
 
-        const response = await apiClient.createOrder(orderData);
-        if (response.success) {
-            clearCart();
-            navigate(`/orders/${response.data._id}`);
-        }
-    };
 
 
     const handleChange = (e) => {

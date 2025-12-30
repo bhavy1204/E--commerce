@@ -34,6 +34,10 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    shippingCost: {
+        type: Number,
+        default: 0
+    },
     shippingAddress: {
         firstName: String,
         lastName: String,
