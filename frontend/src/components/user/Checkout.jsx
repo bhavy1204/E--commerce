@@ -273,7 +273,7 @@ export const Checkout = () => {
                                     className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                                 />
                                 <span className="text-sm text-gray-700">
-                                    Express Delivery (Flat ₹180)
+                                    Express Delivery (2 days, ₹180)
                                 </span>
                             </label>
                         </div>
