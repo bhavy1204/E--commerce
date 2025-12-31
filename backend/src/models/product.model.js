@@ -42,10 +42,8 @@ const productSchema = new mongoose.Schema({
             message: 'Product must have between 3 and 5 images'
         }
     },
-    views: {
-        type: Number,
-        default: 0
-    }
+    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],
+    views: { type: Number, default: 0 }
 }, { timestamps: true });
 
 export const Product = mongoose.model("Product", productSchema);
