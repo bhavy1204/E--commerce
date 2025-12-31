@@ -144,6 +144,30 @@ class ApiClient {
         });
     }
 
+    // Review methods
+    async getReviews(productId, params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        return this.request(`/reviews/${productId}?${queryString}`);
+    }
+
+    async checkReviewEligibility(productId) {
+        return this.request(`/reviews/${productId}/eligibility`);
+    }
+
+    async addReview(productId, reviewData) {
+        return this.request(`/reviews/${productId}`, {
+            method: 'POST',
+            body: JSON.stringify(reviewData),
+        });
+    }
+
+    async deleteReview(reviewId) {
+        return this.request(`/reviews/${reviewId}`, {
+            method: 'DELETE',
+        });
+    }
+
+
     // Order methods
     async createOrder(orderData) {
         return this.request('/orders', {

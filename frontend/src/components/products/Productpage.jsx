@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
 import { useCart } from '../../context/AuthContext';
 import { FaqList } from './FaqList';
+import { ReviewSection } from './ReviewSection';
 
 export const Productpage = () => {
     const { id } = useParams();
@@ -163,6 +164,9 @@ export const Productpage = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Reviews */}
+                <ReviewSection productId={id} />
             </div>
         </div>
     );

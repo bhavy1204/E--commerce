@@ -124,37 +124,46 @@ export const addReview = async (req, res) => {
  */
 export const checkReviewEligibility = async (req, res) => {
     try {
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+        });
+
         const { productId } = req.params;
         const userId = req.user?._id;
 
         if (!userId) {
+            console.log("NO USER TO REVIEW")
             return res.status(200).json({
                 success: true,
                 canReview: false,
-                alreadyReviewed: false
+                alreadyReviewed: false,
             });
         }
+
+        console.log("USER 👉", req.user);
 
         const hasPurchased = await Order.exists({
             user: userId,
             'items.product': productId,
-            paymentStatus: 'paid'
+            status: { $in: ['in-transit', 'delivered'] },
         });
 
         const alreadyReviewed = await Review.exists({
             product: productId,
-            user: userId
+            user: userId,
         });
 
         return res.status(200).json({
             success: true,
             canReview: Boolean(hasPurchased) && !alreadyReviewed,
-            alreadyReviewed: Boolean(alreadyReviewed)
+            alreadyReviewed: Boolean(alreadyReviewed),
         });
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: 'Error checking review eligibility'
+            message: 'Error checking review eligibility',
         });
     }
 };

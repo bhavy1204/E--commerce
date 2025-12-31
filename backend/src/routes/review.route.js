@@ -6,9 +6,9 @@ const router = express.Router();
 
 // Public routes
 router.get("/:productId", getReviews);
-router.get("/:productId/eligibility", checkReviewEligibility)
 
 // eligible users
+router.get("/:productId/eligibility", verifyJWT, checkReviewEligibility)
 router.post("/:productId", verifyJWT, addReview);
 router.delete("/:reviewId", verifyJWT, deleteReview);
 
