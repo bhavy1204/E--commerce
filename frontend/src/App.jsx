@@ -23,6 +23,7 @@ import { VerifyOtp } from './components/user/VerifyOtp'
 import { ResetPassword } from './components/user/ResetPassword'
 import { TermsAndConditions } from './components/legal/TermsAndConditions'
 import { RefundPolicy } from './components/legal/RefundPolicy'
+import {Customisation} from "./components/legal/Customisation"
 
 function App() {
 
@@ -47,6 +48,7 @@ function App() {
             {/* <Route path="/orders/:orderId" element={<OrderDetail />} /> */}
             <Route path="/admin/*" element={<AdminPanel />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/customisation" element={<Customisation />} />
             <Route path="/shipping-policy" element={<ShippingPolicy />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-otp" element={<VerifyOtp />} />

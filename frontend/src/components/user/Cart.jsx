@@ -168,13 +168,23 @@ export const Cart = () => {
                                 </div>
                             ))}
                         </div>
-
+                    <div className="flex justify-between">
+                                
                         <button
                             onClick={clearCart}
                             className="mt-4 text-red-500 hover:text-red-700"
                         >
                             Clear Cart
                         </button>
+
+                        <Link
+                                to="/customisation"
+                                className=" mt-4 text-purple-600 hover:text-purple-700"
+                            >
+                                Customisation Policy
+                            </Link>
+                            </div>
+
                     </div>
 
                     {/* Order Summary */}
