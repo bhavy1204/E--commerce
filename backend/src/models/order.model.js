@@ -38,6 +38,10 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    customizationNotes: {
+        type: String,
+        default: ""
+    },
     shippingAddress: {
         firstName: String,
         lastName: String,

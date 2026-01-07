@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { AdminDashboard } from './AdminDashboard';
 import { AdminProductForm } from './AdminProductForm';
+import { AdminProducts } from './AdminProducts';
 import { AdminOrders } from './AdminOrders';
 import { AdminOrderDetail } from './AdminOrderDetail';
 import { AdminContentManager } from './AdminContentManager';
@@ -30,12 +31,12 @@ export const AdminPanel = () => {
                         </Link>
 
                         <Link
-                            to="/admin/products/new"
-                            className={`flex items-center gap-3 text-white hover:bg-purple-700 px-4 py-2 rounded-md ${location.pathname === '/admin/products/new' ? 'bg-purple-700' : ''
+                            to="/admin/products"
+                            className={`flex items-center gap-3 text-white hover:bg-purple-700 px-4 py-2 rounded-md ${location.pathname === '/admin/products' ? 'bg-purple-700' : ''
                                 }`}
                         >
                             <Package className="w-5 h-5" />
-                            Add Product
+                            All Products
                         </Link>
 
                         <Link
@@ -71,7 +72,9 @@ export const AdminPanel = () => {
                 <main className="flex-1">
                     <Routes>
                         <Route index element={<AdminDashboard />} />
+                        <Route path="products" element={<AdminProducts />} />
                         <Route path="products/new" element={<AdminProductForm />} />
+                        <Route path="products/edit/:id" element={<AdminProductForm />} />
                         <Route path="orders" element={<AdminOrders />} />
                         <Route path="orders/:orderId" element={<AdminOrderDetail />} />
                         <Route path="content" element={<AdminContentManager />} />

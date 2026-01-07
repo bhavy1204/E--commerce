@@ -116,7 +116,8 @@ export const createOrder = async (req, res) => {
             coupon: appliedCoupon ? appliedCoupon._id : undefined,
             coupon: appliedCoupon ? appliedCoupon._id : undefined,
             discountAmount,
-            shippingCost
+            shippingCost,
+            customizationNotes: req.body.customizationNotes || ""
         });
 
         if (appliedCoupon) {

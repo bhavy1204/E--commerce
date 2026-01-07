@@ -266,7 +266,7 @@ export const verifyPayment = async (req, res) => {
 
         let totalAmount = 0;
         const orderItems = [];
-        const { items, shippingAddress, userEmail, userName, userId, couponCode, shippingCost = 0 } = orderPayload;
+        const { items, shippingAddress, userEmail, userName, userId, couponCode, shippingCost = 0, customizationNotes } = orderPayload;
 
         // If userId is not in payload, we might get it from req.user if authenticated middleware is used
         // Assuming verifyPayment is protected or we pass userId in payload
@@ -359,6 +359,7 @@ export const verifyPayment = async (req, res) => {
         const finalTotal = totalAmount + shippingCost - discountAmount;
 
         const Order = await import("../models/order.model.js").then(m => m.Order);
+
         const newOrder = await Order.create({
             user: user_Id,
             items: orderItems,
@@ -382,7 +383,8 @@ export const verifyPayment = async (req, res) => {
             paymentMethod: 'online',
             coupon: appliedCoupon ? appliedCoupon._id : undefined,
             discountAmount,
-            shippingCost
+            shippingCost,
+            customizationNotes: customizationNotes || "" // Add this line
         });
 
         // ---------------------------

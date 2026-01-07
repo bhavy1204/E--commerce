@@ -13,6 +13,7 @@ export const Cart = () => {
     const [couponError, setCouponError] = useState('');
     const [couponSuccess, setCouponSuccess] = useState('');
     const [shippingState, setShippingState] = useState('');
+    const [customizationNotes, setCustomizationNotes] = useState('');
 
     const indianStates = [
         "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",
@@ -28,7 +29,7 @@ export const Cart = () => {
 
         const lowerState = shippingState.toLowerCase();
 
-        if (lowerState === 'rajasthan') return 60;
+        if (lowerState === 'rajasthan') return 10;
         if (lowerState === 'gujarat') return 100;
 
         const southStates = ['tamil nadu', 'kerala', 'karnataka', 'andhra pradesh', 'telangana'];
@@ -82,7 +83,8 @@ export const Cart = () => {
                 couponCode: appliedCoupon ? appliedCoupon.code : null,
                 discountAmount: getDiscountAmount(),
                 shippingState: shippingState,
-                shippingCost: getShippingCost()
+                shippingCost: getShippingCost(),
+                customizationNotes: customizationNotes,
             }
         });
     };
@@ -168,22 +170,33 @@ export const Cart = () => {
                                 </div>
                             ))}
                         </div>
-                    <div className="flex justify-between">
-                                
-                        <button
-                            onClick={clearCart}
-                            className="mt-4 text-red-500 hover:text-red-700"
-                        >
-                            Clear Cart
-                        </button>
+                        <div className="flex justify-between">
 
-                        <Link
+                            <button
+                                onClick={clearCart}
+                                className="mt-4 text-red-500 hover:text-red-700"
+                            >
+                                Clear Cart
+                            </button>
+
+                            <Link
                                 to="/customisation"
                                 className=" mt-4 text-purple-600 hover:text-purple-700"
                             >
                                 Customisation Policy
                             </Link>
-                            </div>
+                        </div>
+
+                        <div className="mt-6">
+                            <label className="block text-sm font-semibold mb-2">Customization / Order Notes</label>
+                            <textarea
+                                value={customizationNotes}
+                                onChange={(e) => setCustomizationNotes(e.target.value)}
+                                placeholder="Add any specific instructions for your order here..."
+                                rows="3"
+                                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            />
+                        </div>
 
                     </div>
 

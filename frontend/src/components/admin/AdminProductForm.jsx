@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { apiClient } from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
 
@@ -48,6 +48,8 @@ const SortableImage = ({ image }) => {
 export const AdminProductForm = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { id } = useParams(); // Get product ID for edit mode
+  const isEditMode = !!id;
 
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -77,7 +79,10 @@ export const AdminProductForm = () => {
       return;
     }
     fetchCategories();
-  }, [user]);
+    if (isEditMode) {
+      fetchProductData();
+    }
+  }, [user, id]);
 
   const fetchCategories = async () => {
     try {
@@ -85,6 +90,29 @@ export const AdminProductForm = () => {
       if (res.success) setCategories(res.data);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const fetchProductData = async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.getProductById(id);
+      if (res.success) {
+        const p = res.data;
+        setFormData({
+          title: p.title,
+          description: p.description,
+          category: p.category,
+          subCategory: p.subCategory,
+          price: p.price,
+          stock: p.stock
+        });
+        // We do NOT load images into state for editing, as image editing is disabled
+      }
+    } catch (err) {
+      setError(err.message || "Error fetching product");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -182,7 +210,8 @@ export const AdminProductForm = () => {
       return;
     }
 
-    if (images.length < 3 || images.length > 5) {
+    // Only check image count if NOT in edit mode
+    if (!isEditMode && (images.length < 3 || images.length > 5)) {
       setError("Please select between 3 and 5 images");
       setLoading(false);
       return;
@@ -190,7 +219,6 @@ export const AdminProductForm = () => {
 
     try {
       const fd = new FormData();
-
       fd.append("title", formData.title);
       fd.append("description", formData.description);
       fd.append("category", category);
@@ -198,16 +226,31 @@ export const AdminProductForm = () => {
       fd.append("price", formData.price);
       fd.append("stock", formData.stock);
 
-      // ORDER MATTERS
-      images.forEach((img) => fd.append("images", img.file));
+      if (isEditMode) {
+        // Update Logic
+        // We do not append new images in edit mode as per requirement,
+        // but we send the rest of the data as FormData.
 
-      const res = await apiClient.createProduct(fd);
-      if (res.success) {
-        alert("Product created successfully!");
-        navigate("/admin");
+        const res = await apiClient.updateProduct(id, fd);
+        if (res.success) {
+          alert("Product updated successfully!");
+          navigate("/admin/products");
+        }
+
+      } else {
+        // Create Logic
+        // Append images for creation
+        images.forEach((img) => fd.append("images", img.file));
+
+        const res = await apiClient.createProduct(fd);
+        if (res.success) {
+          alert("Product created successfully!");
+          navigate("/admin/products"); // Redirect to product list
+        }
       }
+
     } catch (err) {
-      setError(err.message || "Error creating product");
+      setError(err.message || "Error saving product");
     } finally {
       setLoading(false);
     }
@@ -218,7 +261,7 @@ export const AdminProductForm = () => {
   return (
     <div className="min-h-screen px-4 md:px-8 py-8 bg-gray-50">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Add New Product</h1>
+        <h1 className="text-3xl font-bold mb-8">{isEditMode ? 'Edit Product' : 'Add New Product'}</h1>
 
         <form
           onSubmit={handleSubmit}
@@ -360,85 +403,74 @@ export const AdminProductForm = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-2">
-                Product Images (3-5 images required)
+            {!isEditMode && (
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Product Images (3-5 images required)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                  required
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  Select between 3 and 5 images
+                </p>
+              </div>
+            )}
+
+          </div>
+
+          {/* ---------------- Images (Only for Create Mode) ---------------- */}
+
+          {!isEditMode && (
+            <div className="mt-6">
+              <label className="block font-semibold mb-2">
+                Product Images (Drag to reorder)
               </label>
+
               <input
                 type="file"
                 accept="image/*"
                 multiple
                 onChange={handleImageChange}
-                required
-                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="mb-4"
               />
-              <p className="text-sm text-gray-600 mt-1">
-                Select between 3 and 5 images
-              </p>
-            </div>
 
-            {/* {imagePreview.length > 0 && (
-              <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mt-4">
-                {imagePreview.map((preview, idx) => (
-                  <div key={idx} className="relative">
-                    <img
-                      src={preview}
-                      alt={`Preview ${idx + 1}`}
-                      className="w-full h-32 object-cover rounded-md border"
-                    />
-                  </div>
-                ))}
-              </div>
-            )} */}
-
-            
-          </div>
-
-          {/* ---------------- Images ---------------- */}
-
-          <div className="mt-6">
-            <label className="block font-semibold mb-2">
-              Product Images (Drag to reorder)
-            </label>
-
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageChange}
-              className="mb-4"
-            />
-
-            {images.length > 0 && (
-              <DndContext
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={images.map((i) => i.id)}
-                  strategy={rectSortingStrategy}
+              {images.length > 0 && (
+                <DndContext
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
                 >
-                  <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
-                    {images.map((img) => (
-                      <SortableImage key={img.id} image={img} />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            )}
-          </div>
+                  <SortableContext
+                    items={images.map((i) => i.id)}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+                      {images.map((img) => (
+                        <SortableImage key={img.id} image={img} />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              )}
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={loading}
             className="mt-6 bg-purple-600 text-white px-6 py-3 rounded hover:bg-purple-700 disabled:opacity-50"
           >
-            {loading ? "Creating..." : "Create Product"}
+            {loading ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Product" : "Create Product")}
           </button>
           <button
             type="button"
-            onClick={() => navigate("/admin")}
-            className="bg-gray-500 text-white px-6 py-3 rounded-md hover:bg-gray-600 font-semibold"
+            onClick={() => navigate("/admin/products")} // Redirect to list
+            className="bg-gray-500 text-white px-6 py-3 rounded-md hover:bg-gray-600 font-semibold ml-4"
           >
             Cancel
           </button>
@@ -447,3 +479,4 @@ export const AdminProductForm = () => {
     </div>
   );
 };
+

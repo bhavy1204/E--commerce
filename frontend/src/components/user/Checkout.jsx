@@ -3,14 +3,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
 import { useCart, useAuth } from '../../context/AuthContext';
 
-
-
 export const Checkout = () => {
     const { cart, getTotal, clearCart } = useCart();
     const { user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation(); // Ensure location is defined
-    const { couponCode, discountAmount, shippingState, shippingCost: initialShippingCost } = location.state || {}; // Add shipping props
+    const { couponCode, discountAmount, shippingState, shippingCost: initialShippingCost, customizationNotes } = location.state || {}; // Add shipping props
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [expressDelivery, setExpressDelivery] = useState(false);
 
@@ -70,6 +68,7 @@ export const Checkout = () => {
                         shippingAddress: formData, // Send full object
                         shippingCost,
                         couponCode,
+                        customizationNotes, // Include notes
                         amount: data.amount,
                         items: cart.map((item) => ({
                             productId: item.productId, // CRITICAL: Send productId for backend stock update
@@ -140,6 +139,7 @@ export const Checkout = () => {
                 paymentMethod: 'cod',
                 couponCode,
                 shippingCost,
+                customizationNotes,
                 totalAmount: getTotal() - (discountAmount || 0) + shippingCost
             };
 
@@ -253,6 +253,13 @@ export const Checkout = () => {
 
 
                         <div className="mb-6 space-y-3">
+                            <div>
+                                <label className="block text-sm font-semibold mb-2">Customization / Order Notes</label>
+                                <div className="w-full px-4 py-2 border rounded-md bg-gray-50 text-gray-700 min-h-[80px]">
+                                    {customizationNotes || "No customization notes added."}
+                                </div>
+                            </div>
+
                             <label className="flex items-center space-x-2">
                                 <input
                                     type="checkbox"

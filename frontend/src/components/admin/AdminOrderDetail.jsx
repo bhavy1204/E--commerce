@@ -63,13 +63,13 @@ export const AdminOrderDetail = () => {
                 </button>
 
                 <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                            <div>
-                                <h1 className="text-3xl font-bold">Order #{order._id.slice(-8)}</h1>
-                                <p className="text-gray-600">Placed on {new Date(order.createdAt).toLocaleString()}</p>
-                                <p className="text-sm text-gray-500 uppercase mt-1">Payment: {order.paymentMethod}</p>
-                            </div>
-                            <div className="mt-4 md:mt-0 flex flex-col gap-2">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold">Order #{order._id.slice(-8)}</h1>
+                            <p className="text-gray-600">Placed on {new Date(order.createdAt).toLocaleString()}</p>
+                            <p className="text-sm text-gray-500 uppercase mt-1">Payment: {order.paymentMethod}</p>
+                        </div>
+                        <div className="mt-4 md:mt-0 flex flex-col gap-2">
                             <label className="text-sm font-semibold text-gray-600">Order Status</label>
                             <select
                                 value={order.status}
@@ -112,6 +112,14 @@ export const AdminOrderDetail = () => {
                             )}
                         </div>
                     </div>
+
+                    {/* Customization Notes */}
+                    {order.customizationNotes && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h2 className="text-lg font-semibold text-yellow-800 mb-2">Customization Notes</h2>
+                            <p className="text-gray-700 whitespace-pre-wrap">{order.customizationNotes}</p>
+                        </div>
+                    )}
 
                     <div className="border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-4">
