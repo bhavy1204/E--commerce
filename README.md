@@ -1,6 +1,6 @@
 # E-Commerce Website
 
-A full-stack MERN (MongoDB, Express, React, Node.js) e-commerce website with admin panel functionality.
+A full-stack MERN (MongoDB, Express, React, Node.js) e-commerce website with admin panel functionality. Ot is designed for a single seller only. 
 
 ## Features
 
